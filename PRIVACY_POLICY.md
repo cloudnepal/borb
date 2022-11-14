@@ -15,6 +15,7 @@ These are roughly the steps followed:
 1. Upon installing `borb`, a random user ID is generated
 2. This user ID is stored in the installation directory of `borb` (assuming the right file-permissions, etc)
 3. Whenever a read/write operation is performed, `borb` sends the following data:
+
 	3.1 city (e.g. "Ghent")
 	3.2 country_code (e.g. "BE")
 	3.3 country_name (e.g. "Belgium")
