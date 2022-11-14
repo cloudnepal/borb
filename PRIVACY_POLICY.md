@@ -18,7 +18,7 @@ These are roughly the steps followed:
    1. **city** (e.g. "Ghent")
    2. **country_code** (e.g. "BE")
    3. **country_name** (e.g. "Belgium")
-   4. **event (this tells our servers whether you are reading/writing a PDF)
+   4. **event** (this tells our servers whether you are reading/writing a PDF)
    5. **latitude** (down to the city level)
    6. **longitude** (down to the city level)
    7. **state** (e.g. "East-Flanders")
@@ -32,8 +32,9 @@ These are roughly the steps followed:
 
 We use this data to ensure our services are top-quality.
 For instance, knowing which versions of `borb` are currently in use enables to decide which versions to continue to support.
-We may also decide to invest extra developer-time in supporting arabic scripts should we see a market this. And then there is the big split
-of investing effort into the "reading PDF documents" versus "writing PDF documents" code. This is yet another example of where having user data helps.
+Similarly, we may also decide to invest extra developer-time in supporting arabic scripts should we see a market in this. 
+And then there is the big split of investing effort into the "reading PDF documents" versus "writing PDF documents" code. 
+This is yet another example of where having user data helps.
 
 ### 2.1 Provide, maintain and improve our services
 
