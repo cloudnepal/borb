@@ -15,19 +15,18 @@ These are roughly the steps followed:
 1. Upon installing `borb`, a random user ID is generated
 2. This user ID is stored in the installation directory of `borb` (assuming the right file-permissions, etc)
 3. Whenever a read/write operation is performed, `borb` sends the following data:
+   1. **city** (e.g. "Ghent")
+   2. **country_code** (e.g. "BE")
+   3. **country_name** (e.g. "Belgium")
+   4. **event (this tells our servers whether you are reading/writing a PDF)
+   5. **latitude** (down to the city level)
+   6. **longitude** (down to the city level)
+   7. **state** (e.g. "East-Flanders")
+   8. **sys_platform** (which operating system you are using `borb` on)
+   9. **utc_time_in_ms**
+   10. **version** (which version of `borb` you are using)  
 
-	3.1 city (e.g. "Ghent")
-	3.2 country_code (e.g. "BE")
-	3.3 country_name (e.g. "Belgium")
-	3.4 event (this tells our servers whether you are reading/writing a PDF)
-	3.5 latitude (down to the city level)
-	3.6 longitude (down to the city level)
-	3.7 state (e.g. "East-Flanders")
-	3.8 sys_platform (which operating system you are using `borb` on)
-	3.9 utc_time_in_ms
-	3.10 version (which version of `borb` you are using)
-
-**`borb` uses an online API to gauge your location (city, country_code, country_name, latitude, longitude, state)**
+***Note:** In order to determine your location (city, country_code, country_name, latitude, longitude, state) a free online API is used*
 
 ## 2. We use data to build better services
 
@@ -50,7 +49,7 @@ By knowing our customers, we may develop new products and services that are tail
 By knowing the amount of PDF documents created/read with each version, we can get idea of the popularity and adoption rate of each version of `borb`.
 This gives us the opportunity to fine-tune our release-cycle.
 
-### 2.6 Protect Google, our users, and the public
+### 2.6 Protect `borb`, our users, and the public
 
 We want to ensure developer-effort is spent on those issues that impact the most users. In order to ensure this, we need to know how many people are using
 a given version of `borb`.
