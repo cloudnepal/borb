@@ -7,9 +7,10 @@ for writing Dictionary objects of /Type /Pages
 """
 import logging
 import typing
-from typing import Optional
 
-from borb.io.read.types import AnyPDFType, Dictionary, Name, Reference
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Name
 from borb.io.write.object.dictionary_transformer import DictionaryTransformer
 from borb.io.write.transformer import WriteTransformerState
 
@@ -34,19 +35,28 @@ class PagesTransformer(DictionaryTransformer):
     # PUBLIC
     #
 
-    def can_be_transformed(self, any: AnyPDFType):
+    def can_be_transformed(self, object: AnyPDFType):
         """
-        This function returns True if the object to be converted represents a /Pages Dictionary
+        This function returns True if the object to be transformed is a /Pages Dictionary
+        :param object:  the object to be transformed
+        :return:        True if the object is a /Pages Dictionary, False otherwise
         """
-        return isinstance(any, Dictionary) and "Type" in any and any["Type"] == "Pages"
+        return (
+            isinstance(object, Dictionary)
+            and "Type" in object
+            and object["Type"] == "Pages"
+        )
 
     def transform(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState] = None,
+        context: typing.Optional[WriteTransformerState] = None,
     ):
         """
-        This method writes a /Pages Dictionary to a byte stream
+        This function transforms a /Pages Dictionary into a byte stream
+        :param object_to_transform:     the /Pages Dictionary to transform
+        :param context:                 the WriteTransformerState (containing passwords, etc)
+        :return:                        a (serialized) /Pages Dictionary
         """
         # fmt: off
         assert isinstance(object_to_transform, Dictionary)

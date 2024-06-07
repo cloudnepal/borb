@@ -6,11 +6,13 @@ This implementation of ReadBaseTransformer is responsible for reading the /Catal
 """
 import io
 import typing
-from typing import Any, Dict, List, Optional, Union
 
 from borb.io.read.object.dictionary_transformer import DictionaryTransformer
-from borb.io.read.transformer import ReadTransformerState, Transformer
-from borb.io.read.types import AnyPDFType, Decimal, Dictionary
+from borb.io.read.transformer import ReadTransformerState
+from borb.io.read.transformer import Transformer
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
 from borb.io.read.types import List as bList
 from borb.io.read.types import Name
 from borb.pdf.canvas.event.event_listener import EventListener
@@ -23,11 +25,14 @@ class RootDictionaryTransformer(Transformer):
     """
 
     #
+    # CONSTRUCTOR
+    #
+
+    #
     # PRIVATE
     #
 
     def _re_order_pages(self, root_dictionary: dict) -> None:
-
         # list to hold Page objects (in order)
         pages_in_order: typing.List[Page] = []
 
@@ -46,7 +51,7 @@ class RootDictionaryTransformer(Transformer):
                 and "Type" in obj
                 and obj["Type"] == "Pages"
                 and "Kids" in obj
-                and isinstance(obj["Kids"], List)
+                and isinstance(obj["Kids"], typing.List)
             ):
                 for k in obj["Kids"]:
                     stack_to_handle.append(k)
@@ -55,7 +60,7 @@ class RootDictionaryTransformer(Transformer):
         root_dictionary["Pages"][Name("Kids")] = bList()
         for p in pages_in_order:
             root_dictionary["Pages"]["Kids"].append(p)
-        root_dictionary["Pages"][Name("Count")] = Decimal(len(pages_in_order))
+        root_dictionary["Pages"][Name("Count")] = bDecimal(len(pages_in_order))
 
     #
     # PRIVATE
@@ -66,33 +71,42 @@ class RootDictionaryTransformer(Transformer):
     #
 
     def can_be_transformed(
-        self, object: Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType]
+        self,
+        object: typing.Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType],
     ) -> bool:
         """
-        This function returns True if the object to be converted represents a /Catalog Dictionary
+        This function returns True if the object to be transformed is a /Catalog Dictionary
+        :param object:  the object to be transformed
+        :return:        True if the object is a /Catalog Dictionary, False otherwise
         """
         return (
-            isinstance(object, Dict)
+            isinstance(object, typing.Dict)
             and "Type" in object
             and object["Type"] == "Catalog"
         )
 
     def transform(
         self,
-        object_to_transform: Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
-        parent_object: Any,
-        context: Optional[ReadTransformerState] = None,
+        object_to_transform: typing.Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
+        parent_object: typing.Any,
+        context: typing.Optional[ReadTransformerState] = None,
         event_listeners: typing.List[EventListener] = [],
-    ) -> Any:
+    ) -> typing.Any:
         """
-        This function reads a /Catalog Dictionary from a byte stream
+        This function transforms an /Catalog Dictionary
+        :param object_to_transform:     the /Catalog Dictionary to transform
+        :param parent_object:           the parent Object
+        :param context:                 the ReadTransformerState (containing passwords, etc)
+        :param event_listeners:         the EventListener objects that may need to be notified
+        :return:                        a /Catalog Dictionary
         """
+
         # fmt: off
         assert isinstance(object_to_transform, Dictionary), "object_to_transform must be of type Dictionary"
         # fmt: on
 
         # convert using Dictionary transformer
-        transformed_root_dictionary: Optional[Dictionary] = None
+        transformed_root_dictionary: typing.Optional[Dictionary] = None
         for t in self.get_root_transformer().get_children():
             if isinstance(t, DictionaryTransformer):
                 transformed_root_dictionary = t.transform(

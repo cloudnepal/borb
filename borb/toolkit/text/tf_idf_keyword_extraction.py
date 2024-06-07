@@ -24,13 +24,13 @@
 import io
 import re
 import typing
-from math import log
+import math
 
-from borb.pdf.document.document import Document
 from borb.pdf.canvas.canvas import Canvas
 from borb.pdf.canvas.canvas_stream_processor import CanvasStreamProcessor
 from borb.pdf.canvas.event.begin_page_event import BeginPageEvent
 from borb.pdf.canvas.event.end_page_event import EndPageEvent
+from borb.pdf.document.document import Document
 from borb.pdf.page.page import Page
 from borb.toolkit.text.simple_text_extraction import SimpleTextExtraction
 
@@ -114,14 +114,13 @@ class TFIDFKeywordExtraction(SimpleTextExtraction):
             if k not in out:
                 out[k] = []
             for w, tf in v.items():
-
                 # check minimum_term_frequency
                 if tf < self._minimum_term_frequency:
                     continue
 
                 # normalize tf, idf
                 tf /= self._number_of_words_per_page[k]
-                idf = log(self._number_of_pages / self._inverse_page_frequency[w])
+                idf = math.log(self._number_of_pages / self._inverse_page_frequency[w])
 
                 # avoid multiply by zero
                 tf += 0.0001

@@ -9,22 +9,23 @@ import copy
 import io
 import logging
 import typing
-from pathlib import Path
+import pathlib
 
-from fontTools.afmLib import AFM  # type: ignore [import]
-from fontTools.agl import toUnicode  # type: ignore [import]
-from fontTools.cffLib import CFFFontSet, TopDict  # type: ignore [import]
+from fontTools.afmLib import AFM  # type: ignore[import]
+from fontTools.agl import toUnicode  # type: ignore[import]
+from fontTools.cffLib import CFFFontSet  # type: ignore[import]
+from fontTools.cffLib import TopDict  # type: ignore[import]
 
 from borb.io.read.types import Decimal as bDecimal
-from borb.io.read.types import Dictionary, Name
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Name
 from borb.pdf.canvas.font.adobe_glyph_list import AdobeGlyphList
-from borb.pdf.canvas.font.adobe_standard_encoding import (
-    adobe_standard_decode,
-    adobe_standard_encode,
-)
+from borb.pdf.canvas.font.adobe_standard_encoding import adobe_standard_decode
+from borb.pdf.canvas.font.adobe_standard_encoding import adobe_standard_encode
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.font.simple_font.simple_font import SimpleFont
-from borb.pdf.canvas.font.symbol_encoding import symbol_decode, zapfdingbats_decode
+from borb.pdf.canvas.font.symbol_encoding import symbol_decode
+from borb.pdf.canvas.font.symbol_encoding import zapfdingbats_decode
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,6 @@ class Type1Font(SimpleFont):
         return Type1Font()
 
     def _read_encoding_with_differences(self) -> None:
-
         # check whether we've been here before
         if len(self._unicode_lookup_to_character_identifier) > 0:
             return
@@ -154,7 +154,6 @@ class Type1Font(SimpleFont):
         }
 
     def _read_encoding_with_unclear_glyph_names(self):
-
         # figure out how many characters we'll need to calculate
         # fmt: off
         assert "FirstChar" in self, "Type1Font must have a /FirstChar entry"
@@ -238,6 +237,8 @@ class Type1Font(SimpleFont):
         """
         This function maps a character identifier to its unicode str.
         If no such mapping exists, this function returns None.
+        :param character_identifier:    the character identifier
+        :return:                        the matching unicode str
         """
 
         # If the font dictionary contains a ToUnicode CMap (see 9.10.3, "ToUnicode CMaps"), use that CMap to
@@ -322,6 +323,7 @@ class Type1Font(SimpleFont):
         """
         This function returns the maximum height above the baseline reached by glyphs in this font.
         The height of glyphs for accented characters shall be excluded.
+        :return:    the ascent
         """
         return self["FontDescriptor"]["Ascent"]
 
@@ -329,6 +331,7 @@ class Type1Font(SimpleFont):
         """
         This function returns the maximum depth below the baseline reached by glyphs in this font.
         The value shall be a negative number.
+        :return:    the descent
         """
         return self["FontDescriptor"]["Descent"]
 
@@ -337,6 +340,8 @@ class Type1Font(SimpleFont):
         This function returns the width (in text space) of a given character identifier.
         If this Font is unable to represent the glyph that corresponds to the character identifier,
         this function returns None
+        :param character_identifier:    the character_identifier
+        :return:                        the width (in text space) of the character identifier
         """
         first_char: int = int(self["FirstChar"])
         last_char: int = int(self["LastChar"])
@@ -348,6 +353,8 @@ class Type1Font(SimpleFont):
         """
         This function maps a unicode str to its character identifier.
         If no such mapping exists, this function returns None.
+        :param unicode:             the unicode character
+        :return:                    the character identifier matching the unicode character
         """
         if Name("ToUnicode") in self:
             self._read_to_unicode()
@@ -365,14 +372,14 @@ class Type1Font(SimpleFont):
         ]:
             try:
                 if self["Encoding"] == "WinAnsiEncoding":
-                    return int(unicode.encode("cp1252"))
+                    return int(unicode.encode("cp1252")[0])
                 elif self["Encoding"] == "MacRomanEncoding":
-                    return int(unicode.encode("mac-roman"))
+                    return int(unicode.encode("mac-roman")[0])
                 elif self["Encoding"] == "MacExpertEncoding":
                     # TODO replace by actual MacExpertEncoding
-                    return int(unicode.encode("mac-roman"))
+                    return int(unicode.encode("mac-roman")[0])
                 elif self["Encoding"] == "StandardEncoding":
-                    return int(adobe_standard_encode(unicode))
+                    return int(adobe_standard_encode(unicode)[0])
             except:
                 return None
 
@@ -428,11 +435,11 @@ class StandardType1Font(Type1Font):
             assert font_name is not None, "font_name must be one of the 14 StandardType1Font names."
 
             # check whether AFM directory exists
-            afm_directory: Path = Path(__file__).parent / "afm"
+            afm_directory: pathlib.Path = pathlib.Path(__file__).parent / "afm"
             assert afm_directory.exists(), "AFM directory not found"
 
             # check whether AFM file exists
-            afm_file: Path = afm_directory / (font_name.lower() + ".afm")
+            afm_file: pathlib.Path = afm_directory / (font_name.lower() + ".afm")
             assert afm_file.exists(), "afm file not found"
 
             # build AFM datastructure
@@ -440,6 +447,7 @@ class StandardType1Font(Type1Font):
 
             self[Name("Type")] = Name("Font")
             self[Name("Subtype")] = Name("Type1")
+            # noinspection PyProtectedMember
             self[Name("BaseFont")] = Name(self._afm._attrs["FontName"])
 
             self._character_identifier_to_unicode_lookup: typing.Dict[int, str] = {}
@@ -502,6 +510,8 @@ class StandardType1Font(Type1Font):
         """
         This function maps a character identifier to its unicode str.
         If no such mapping exists, this function returns None.
+        :param character_identifier:    the character identifier
+        :return:                        the matching unicode str
         """
         return self._character_identifier_to_unicode_lookup.get(character_identifier)
 
@@ -509,8 +519,11 @@ class StandardType1Font(Type1Font):
         """
         This function returns the maximum height above the baseline reached by glyphs in this font.
         The height of glyphs for accented characters shall be excluded.
+        :return:    the ascent
         """
+        # noinspection PyProtectedMember
         if "Ascender" in self._afm._attrs:
+            # noinspection PyProtectedMember
             return bDecimal(self._afm._attrs["Ascender"])
         return bDecimal(0)
 
@@ -518,8 +531,11 @@ class StandardType1Font(Type1Font):
         """
         This function returns the maximum depth below the baseline reached by glyphs in this font.
         The value shall be a negative number.
+        :return:    the descent
         """
+        # noinspection PyProtectedMember
         if "Descender" in self._afm._attrs:
+            # noinspection PyProtectedMember
             return bDecimal(self._afm._attrs["Descender"])
         return bDecimal(0)
 
@@ -528,17 +544,19 @@ class StandardType1Font(Type1Font):
         This function returns the width (in text space) of a given character identifier.
         If this Font is unable to represent the glyph that corresponds to the character identifier,
         this function returns None
+        :param character_identifier:    the character_identifier
+        :return:                        the width (in text space) of the character identifier
         """
-        default_tuple: typing.Tuple[int, int, typing.Tuple[int, int, int, int]] = (
-            0,
-            0,
-            (0, 0, 0, 0),
-        )
         name: typing.Optional[str] = AdobeGlyphList.UNICODE_TO_NAME.get(
             ord(self._character_identifier_to_unicode_lookup[character_identifier]),
             None,
         )
-        return bDecimal(self._afm._chars.get(name, default_tuple)[1])
+        # noinspection PyProtectedMember
+        if name in self._afm._chars:
+            return bDecimal(self._afm._chars.get(name)[1])
+        if f"a{character_identifier}" in self._afm._chars:
+            return bDecimal(self._afm._chars.get(f"a{character_identifier}")[1])
+        return bDecimal(0)
 
     @staticmethod
     def is_standard_14_font_name(font_name: str) -> bool:
@@ -551,5 +569,7 @@ class StandardType1Font(Type1Font):
         """
         This function maps a unicode str to its character identifier.
         If no such mapping exists, this function returns None.
+        :param unicode:             the unicode character
+        :return:                    the character identifier matching the unicode character
         """
         return self._unicode_lookup_to_character_identifier.get(unicode)

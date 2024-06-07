@@ -6,20 +6,19 @@ Show one or more text strings, allowing individual glyph positioning. Each
 element of array shall be either a string or a number.
 """
 import typing
-from typing import List
 
-from borb.io.read.types import (
-    AnyPDFType,
-    Name,
-    String,
-    HexadecimalString,
-    Decimal as bDecimal,
-)
+# fmt: off
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import HexadecimalString
+from borb.io.read.types import Name
+from borb.io.read.types import String
 from borb.io.write.font.copy_command_operator import CopyCommandOperator
 from borb.pdf.canvas.font.font import Font
-from borb.pdf.canvas.operator.text.show_text_with_glyph_positioning import (
-    ShowTextWithGlyphPositioning,
-)
+from borb.pdf.canvas.operator.text.show_text_with_glyph_positioning import ShowTextWithGlyphPositioning
+
+
+# fmt: on
 
 
 class SubSetShowTextWithGlyphPositioning(CopyCommandOperator):
@@ -67,15 +66,19 @@ class SubSetShowTextWithGlyphPositioning(CopyCommandOperator):
 
     def invoke(
         self,
-        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore [name-defined]
+        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore[name-defined]
         operands: typing.List[AnyPDFType] = [],
-        event_listeners: typing.List["EventListener"] = [],  # type: ignore [name-defined]
+        event_listeners: typing.List["EventListener"] = [],  # type: ignore[name-defined]
     ) -> None:
         """
-        Invoke the TJ operator
+        Invokes this (TJ) CanvasOperator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may need to be notified
+        :return:                            None
         """
 
-        assert isinstance(operands[0], List), "Operand 0 of TJ must be a List"
+        assert isinstance(operands[0], typing.List), "Operand 0 of TJ must be a List"
         canvas = canvas_stream_processor.get_canvas()
 
         # handle Font being a Name (optimization)

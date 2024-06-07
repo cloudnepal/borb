@@ -28,8 +28,20 @@ class SetTextMatrix(CanvasOperator):
     current text matrix, but shall replace it.
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("Tm", 6)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -39,6 +51,10 @@ class SetTextMatrix(CanvasOperator):
     ) -> None:
         """
         Invoke the Tm operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
 
         assert isinstance(operands[0], Decimal)

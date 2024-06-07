@@ -10,7 +10,11 @@ import zlib
 from decimal import Decimal
 
 from borb.io.read.types import Decimal as bDecimal
-from borb.io.read.types import Dictionary, List, Name, Stream, String
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
+from borb.io.read.types import String
 from borb.pdf.canvas.canvas import Canvas
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
@@ -33,7 +37,7 @@ class Page(Dictionary):
         self[Name("Type")] = Name("Page")
 
         # size: A4 portrait
-        self[Name("MediaBox")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self[Name("MediaBox")] = List().set_is_inline(True)
         self["MediaBox"].append(bDecimal(0))
         self["MediaBox"].append(bDecimal(0))
         self["MediaBox"].append(bDecimal(width))
@@ -44,7 +48,6 @@ class Page(Dictionary):
     #
 
     def _initialize_page_content_stream(self) -> "Page":  # type: ignore[name-defined]
-
         # build content stream object
         if "Contents" not in self:
             content_stream = Stream()
@@ -98,7 +101,8 @@ class Page(Dictionary):
 
         # FreeTextAnnotation needs to embed resources in the Page
         if "Subtype" in annotation and annotation["Subtype"] == "FreeText":
-            annotation._embed_font_in_page(self)  # type: ignore [attr-defined]
+            # noinspection PyProtectedMember
+            annotation._embed_font_in_page(self)  # type: ignore[attr-defined]
 
         # return
         return self
@@ -127,13 +131,15 @@ class Page(Dictionary):
         # return
         return self
 
-    def apply_redact_annotations(self):
+    def apply_redact_annotations(self) -> "Page":
         """
-        This function applies the redaction annotations on this Page
+        This function applies the redaction annotations on this Page.
+        :return:    self
         """
-        from borb.pdf.canvas.redacted_canvas_stream_processor import (
-            RedactedCanvasStreamProcessor,
-        )
+
+        # fmt: off
+        from borb.pdf.canvas.redacted_canvas_stream_processor import RedactedCanvasStreamProcessor
+        # fmt: on
 
         rectangles_to_redact: typing.List[Rectangle] = [
             Rectangle(
@@ -142,7 +148,7 @@ class Page(Dictionary):
                 x["Rect"][2] - x["Rect"][0],
                 x["Rect"][3] - x["Rect"][1],
             )
-            for x in self["Annots"]
+            for x in self.get("Annots", [])
             if "Subtype" in x and x["Subtype"] == "Redact" and "Rect" in x
         ]
 
@@ -160,19 +166,24 @@ class Page(Dictionary):
         )
         self["Contents"][Name("Length")] = bDecimal(len(self["Contents"]["Bytes"]))
 
+        # return
+        return self
+
     def get_annotations(self) -> List:
         """
         This function returns the annotation(s) on this Page
+        :return:    the annotation(s) (as typing.List) on this Page
         """
         if "Annots" not in self:
             self[Name("Annots")] = List()
         return self["Annots"]
 
-    def get_document(self) -> "Document":  # type: ignore [name-defined]
+    def get_document(self) -> "Document":  # type: ignore[name-defined]
         """
         This function returns the Document from which this Page came
+        :return:    the Document
         """
-        d: typing.Any = self.get_root()  # type: ignore [attr-defined]
+        d: typing.Any = self.get_root()
         return d if d.__class__.__name__ == "Document" else None
 
     def get_form_field_value(
@@ -203,6 +214,7 @@ class Page(Dictionary):
     def get_page_info(self) -> PageInfo:
         """
         This function returns the PageInfo object for this Page
+        :return:    the PageInfo Object
         """
         return PageInfo(self)
 

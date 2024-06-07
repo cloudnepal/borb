@@ -19,7 +19,8 @@
 import typing
 from decimal import Decimal
 
-from borb.pdf.canvas.color.color import Color, HexColor
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.font.glyph_line import GlyphLine
 from borb.pdf.canvas.geometry.rectangle import Rectangle
@@ -122,11 +123,9 @@ class LineOfText(ChunkOfText):
     #
 
     def _get_content_box(self, available_space: Rectangle) -> Rectangle:
-
         # for text_alignment == JUSTIFIED we handle it ourselves
         # otherwise we delegate to super
         if self._text_alignment == Alignment.JUSTIFIED:
-
             # determine line height
             assert self._font_size is not None
             line_height: Decimal = self._font_size
@@ -146,7 +145,6 @@ class LineOfText(ChunkOfText):
             return super(LineOfText, self)._get_content_box(available_space)
 
     def _paint_content_box(self, page: "Page", available_space: Rectangle) -> None:  # type: ignore[name-defined]
-
         # if the text_alignment is not JUSTIFIED, we delegate the call to our super
         if self._text_alignment != Alignment.JUSTIFIED:
             super(LineOfText, self)._paint_content_box(page, available_space)

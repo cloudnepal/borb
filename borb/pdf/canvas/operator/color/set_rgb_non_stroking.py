@@ -17,8 +17,20 @@ class SetRGBNonStroking(CanvasOperator):
     Same as RG but used for nonstroking operations.
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("rg", 3)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -28,6 +40,10 @@ class SetRGBNonStroking(CanvasOperator):
     ) -> None:
         """
         Invoke the rg operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         # fmt: off
         assert isinstance(operands[0], Decimal), "operand 0 of rg operator must be of type Decimal"

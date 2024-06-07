@@ -9,8 +9,7 @@ import random
 import re
 import typing
 import zlib
-from pathlib import Path
-
+import pathlib
 import requests
 
 
@@ -24,12 +23,12 @@ class TextGenerator:
     #
 
     def __init__(self):
-        self._token_ids: typing.Dict[str, int] = {}
-        self._rev_token_ids: typing.Dict[int, str] = {}
-        self._token_frequency: typing.Dict[int, int] = {}
         self._markov_model: typing.Dict[
             typing.Tuple[int, int], typing.Dict[int, int]
         ] = {}
+        self._rev_token_ids: typing.Dict[int, str] = {}
+        self._token_frequency: typing.Dict[int, int] = {}
+        self._token_ids: typing.Dict[str, int] = {}
 
     #
     # PRIVATE
@@ -55,7 +54,6 @@ class TextGenerator:
         return True
 
     def _train_using_project_gutenberg(self, gutenberg_url: str) -> "TextGenerator":
-
         training_text: str = requests.get(gutenberg_url).text
 
         # trim header:
@@ -77,7 +75,6 @@ class TextGenerator:
         self._token_frequency = {}
         self._markov_model = {}
         for i in range(0, len(tokens) - 2):
-
             # get token, set/create ID
             t0: str = tokens[i].strip(" \n\t")
             if not TextGenerator._is_valid_token(t0):
@@ -133,7 +130,6 @@ class TextGenerator:
         while len(
             sentence_being_built
         ) < min_sentence_length or not sentence_being_built[-1].endswith("."):
-
             # init
             if len(sentence_being_built) == 0:
                 seed: typing.Tuple[int, int] = random.choice(
@@ -181,7 +177,7 @@ class TextGenerator:
         # return
         return "".join([x + " " for x in sentence_being_built])
 
-    def load(self, json_file: Path) -> "TextGenerator":
+    def load(self, json_file: pathlib.Path) -> "TextGenerator":
         """
         This function loads a TextGenerator from a (zipped) JSON file
         :param json_file:   the location where to load the (zipped) JSON

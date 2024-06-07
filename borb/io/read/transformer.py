@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -7,10 +7,10 @@ Add children to handle specific cases (transforming dictionaries, arrays, xref, 
 """
 import io
 import typing
-from typing import Any, Optional, Union
 
 from borb.io.read.tokenize.high_level_tokenizer import HighLevelTokenizer
-from borb.io.read.types import AnyPDFType, Reference
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Reference
 from borb.pdf.canvas.event.event_listener import EventListener
 
 
@@ -30,17 +30,19 @@ class ReadTransformerState:
 
     def __init__(
         self,
-        source: Optional[Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO]] = None,
-        tokenizer: Optional[HighLevelTokenizer] = None,
-        root_object: Optional[Any] = None,
         password: typing.Optional[str] = None,
+        root_object: typing.Optional[typing.Any] = None,
+        source: typing.Optional[
+            typing.Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO]
+        ] = None,
+        tokenizer: typing.Optional[HighLevelTokenizer] = None,
     ):
-        self.source = source
-        self.tokenizer = tokenizer
-        self.root_object = root_object
         self.indirect_reference_chain: typing.Set[Reference] = set()
         self.password: typing.Optional[str] = password
-        self.security_handler: typing.Optional[typing.Any] = None
+        self.root_object = root_object
+        self.security_handler: typing.Optional["StandardSecurityHandler"] = None  # type: ignore[name-defined]
+        self.source = source
+        self.tokenizer = tokenizer
 
     #
     # PRIVATE
@@ -63,9 +65,9 @@ class Transformer:
 
     def __init__(self):
         self._children = []
-        self._parent = None
-        self._level: int = 0
         self._invocation_count: int = 0
+        self._level: int = 0
+        self._parent = None
 
     #
     # PRIVATE
@@ -101,7 +103,8 @@ class Transformer:
         return self
 
     def can_be_transformed(
-        self, object: Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType]
+        self,
+        object: typing.Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType],
     ) -> bool:
         """
         This function returns True if the object to be transformed can be transformed by this ReadBaseTransformer
@@ -128,11 +131,11 @@ class Transformer:
 
     def transform(
         self,
-        object_to_transform: Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
-        parent_object: Any,
-        context: Optional[ReadTransformerState] = None,
+        object_to_transform: typing.Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
+        parent_object: typing.Any,
+        context: typing.Optional[ReadTransformerState] = None,
         event_listeners: typing.List[EventListener] = [],
-    ) -> Any:
+    ) -> typing.Any:
         """
         This function reads an object from a byte stream.
         The object being read depends on the implementation of ReadBaseTransformer.
@@ -141,7 +144,6 @@ class Transformer:
             return object_to_transform
         for h in self._children:
             if h.can_be_transformed(object_to_transform):
-                # print("%s<%s level='%d' invocation='%d'>" % ("   " * self.level, h.__class__.__name__, self.level, self.invocation_count), flush=True)
                 self._level += 1
                 self._invocation_count += 1
                 out = h.transform(
@@ -151,6 +153,5 @@ class Transformer:
                     event_listeners=event_listeners,
                 )
                 self._level -= 1
-                # print("%s</%s>" % ("   " * self.level, h.__class__.__name__))
                 return out
         return None

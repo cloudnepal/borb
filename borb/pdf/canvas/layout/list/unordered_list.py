@@ -7,8 +7,10 @@ This implementation of LayoutElement represents an unordered list
 import typing
 from decimal import Decimal
 
-from borb.pdf.canvas.color.color import Color, HexColor, X11Color
-from borb.pdf.canvas.layout.layout_element import LayoutElement, Alignment
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
+from borb.pdf.canvas.layout.layout_element import Alignment
+from borb.pdf.canvas.layout.layout_element import LayoutElement
 from borb.pdf.canvas.layout.list.list import List
 from borb.pdf.canvas.layout.text.chunk_of_text import ChunkOfText
 
@@ -86,13 +88,32 @@ class UnorderedList(List):
     def _get_bullet_layout_element(
         self, item_index: int, item: LayoutElement
     ) -> LayoutElement:
+        # determine font_size from item
+        font_size: Decimal = Decimal(12)
+        try:
+            font_size = item.get_font_size()
+        except:
+            pass
+
+        # determine font_color from item
+        font_color: Color = HexColor("000000")
+        try:
+            font_color = item.get_font_color()  # type: ignore[attr-defined]
+        except:
+            pass
+
+        # nested List objects
         if isinstance(item, List):
-            return ChunkOfText(" ")
+            return ChunkOfText(" ", font_size=font_size, padding_right=Decimal(12))
+
+        # default
         return ChunkOfText(
             text=self._get_bullet_text(item_index, item),
-            font_size=self.get_font_size(),
-            font_color=X11Color("Black"),
-            font="Zapfdingbats",
+            font_size=font_size or Decimal(12),
+            padding_right=Decimal(12),
+            font_color=font_color or HexColor("000000"),
+            font="ZapfDingbats",
+            vertical_alignment=Alignment.TOP,
         )
 
     def _get_bullet_text(self, item_index: int, item: LayoutElement) -> str:

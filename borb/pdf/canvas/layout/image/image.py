@@ -6,17 +6,19 @@ This implementation of LayoutElement represents an Image
 """
 import typing
 from decimal import Decimal
-from pathlib import Path
-from typing import Optional
+import pathlib
 
 import requests
-from PIL import Image as PILImage  # type: ignore [import]
+from PIL import Image as PILImageModule
 
 from borb.io.read.pdf_object import PDFObject
-from borb.io.read.types import Dictionary, Name
-from borb.pdf.canvas.color.color import HexColor, Color
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Name
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
-from borb.pdf.canvas.layout.layout_element import Alignment, LayoutElement
+from borb.pdf.canvas.layout.layout_element import Alignment
+from borb.pdf.canvas.layout.layout_element import LayoutElement
 from borb.pdf.page.page import Page
 
 
@@ -31,7 +33,8 @@ class Image(LayoutElement):
 
     def __init__(
         self,
-        image: typing.Union[str, Path, PILImage.Image],
+        image: typing.Union[str, pathlib.Path, PILImageModule.Image],
+        background_color: typing.Optional[Color] = None,
         border_bottom: bool = False,
         border_color: Color = HexColor("000000"),
         border_left: bool = False,
@@ -42,7 +45,7 @@ class Image(LayoutElement):
         border_right: bool = False,
         border_top: bool = False,
         border_width: Decimal = Decimal(1),
-        height: Optional[Decimal] = None,
+        height: typing.Optional[Decimal] = None,
         horizontal_alignment: Alignment = Alignment.LEFT,
         margin_bottom: typing.Optional[Decimal] = None,
         margin_left: typing.Optional[Decimal] = None,
@@ -53,10 +56,10 @@ class Image(LayoutElement):
         padding_right: Decimal = Decimal(0),
         padding_top: Decimal = Decimal(0),
         vertical_alignment: Alignment = Alignment.TOP,
-        width: Optional[Decimal] = None,
+        width: typing.Optional[Decimal] = None,
     ):
         super(Image, self).__init__(
-            background_color=None,
+            background_color=background_color,
             border_bottom=border_bottom,
             border_color=border_color,
             border_left=border_left,
@@ -67,6 +70,8 @@ class Image(LayoutElement):
             border_right=border_right,
             border_top=border_top,
             border_width=border_width,
+            font="Helvetica",
+            font_color=HexColor("#000000"),
             font_size=Decimal(12),
             horizontal_alignment=horizontal_alignment,
             margin_bottom=margin_bottom if margin_bottom is not None else Decimal(5),
@@ -79,7 +84,7 @@ class Image(LayoutElement):
             padding_top=padding_top,
             vertical_alignment=vertical_alignment,
         )
-        self._image: typing.Union[str, Path, PILImage.Image] = image
+        self._image: typing.Union[str, pathlib.Path, PILImageModule.Image] = image
         self._width: typing.Optional[Decimal] = width
         self._height: typing.Optional[Decimal] = height
 
@@ -98,10 +103,10 @@ class Image(LayoutElement):
             self._height,
         )
 
-    def _get_image_resource_name(self, image: PILImage, page: Page):  # type: ignore[valid-type]
+    def _get_image_resource_name(self, image: PILImageModule, page: Page):  # type: ignore[valid-type]
         # create resources if needed
         if "Resources" not in page:
-            page[Name("Resources")] = Dictionary().set_parent(page)  # type: ignore [attr-defined]
+            page[Name("Resources")] = Dictionary().set_parent(page)
         if "XObject" not in page["Resources"]:
             page["Resources"][Name("XObject")] = Dictionary()
 
@@ -119,7 +124,6 @@ class Image(LayoutElement):
             return Name("Im%d" % image_index)
 
     def _paint_content_box(self, page: Page, bounding_box: Rectangle):
-
         # add image to resources
         self.force_load_image()
         image_resource_name = self._get_image_resource_name(self._image, page)
@@ -147,12 +151,12 @@ class Image(LayoutElement):
         """
         This function forces the underlying PIL Image to load.
         Images can be specified by providing a Path, str, or PIL Image.
-        The underyling image is only loaded when needed (such as when performing layout)
+        The underlying image is only loaded when needed (such as when performing layout)
         :return:    None
         """
         # load Image from URL
         if isinstance(self._image, str):
-            self._image = PILImage.open(
+            self._image = PILImageModule.open(
                 requests.get(
                     self._image,
                     stream=True,
@@ -162,12 +166,13 @@ class Image(LayoutElement):
                 ).raw,
             )
 
-        # load image from Path
-        if isinstance(self._image, Path):
-            self._image = PILImage.open(self._image)
+        # load image
+        if isinstance(self._image, pathlib.Path):
+            self._image = PILImageModule.open(self._image)
 
         # self._image should be a PIL Image by now
-        assert isinstance(self._image, PILImage.Image)
+        assert isinstance(self._image, PILImageModule.Image)
+        # self._image = self._image.resize(size=(int(self._width), int(self._height)))
         PDFObject.add_pdf_object_methods(self._image)
 
         # set width / height
@@ -175,3 +180,12 @@ class Image(LayoutElement):
             self._width = Decimal(self._image.width)
         if self._height is None:
             self._height = Decimal(self._image.height)
+
+    def get_PIL_image(self) -> PILImageModule.Image:
+        """
+        This function returns the PIL.Image.Image underlying this borb Image
+        :return:    the PIL.Image.Image underlying this borb Image
+        """
+        self.force_load_image()
+        assert isinstance(self._image, PILImageModule.Image)
+        return self._image

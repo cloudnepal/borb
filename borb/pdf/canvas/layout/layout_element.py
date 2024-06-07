@@ -7,14 +7,15 @@ This includes an Alignment Enum type, and the base implementation of LayoutEleme
 """
 import typing
 from decimal import Decimal
-from enum import Enum
+import enum
 
-from borb.pdf.canvas.color.color import Color, HexColor
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.line_art.blob_factory import BlobFactory
 
 
-class Alignment(Enum):
+class Alignment(enum.Enum):
     """
     In typesetting and page layout, alignment or range is the setting of text flow or image placement relative to a page,
     column (measure), table cell, or tab.
@@ -39,6 +40,10 @@ class LayoutElement:
     e.g. the placement of borders, margins, padding, background color, etc
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(
         self,
         background_color: typing.Optional[Color] = None,
@@ -52,6 +57,8 @@ class LayoutElement:
         border_right: bool = False,
         border_top: bool = False,
         border_width: Decimal = Decimal(1),
+        font: typing.Union["Font", str] = "Helvetica",  # type: ignore[name-defined]
+        font_color: Color = HexColor("#000000"),
         font_size: typing.Optional[Decimal] = None,
         horizontal_alignment: Alignment = Alignment.LEFT,
         margin_bottom: typing.Optional[Decimal] = Decimal(0),
@@ -97,7 +104,9 @@ class LayoutElement:
         self._border_width = border_width
         self._border_color = border_color
 
-        # font_size
+        # font, font_color, font_size
+        self._font = font
+        self._font_color = font_color
         self._font_size = font_size
 
         # margin
@@ -295,7 +304,6 @@ class LayoutElement:
             and self._border_radius_bottom_left == 0
             and self._border_radius_bottom_right == 0
         ):
-
             # fmt: off
             content = """
                 q %f %f %f rg %f %f m
@@ -421,6 +429,135 @@ class LayoutElement:
         """
         return self._font_size or Decimal(0)
 
+    def get_golden_ratio_landscape_box(self) -> typing.Optional[Rectangle]:
+        """
+        This function returns the layout box that fits this LayoutElement
+        and whose ratio of dimensions (width / height) are closest to the golden ratio.
+        :return:    the layout box (in landscape mode) with ratio closest to the golden ratio
+        """
+
+        # define golden ratio and its inverse
+        GOLDEN_RATIO: Decimal = Decimal(1.618)
+        INVERSE_GOLDEN_RATIO = Decimal(1) / GOLDEN_RATIO
+
+        # keep track of best landscape box
+        best_landscape_box: typing.Optional[Rectangle] = None
+
+        # try all possible widths
+        for w in range(0, 2048, 10):
+            try:
+                # try layout with the given width
+                landscape_box: Rectangle = self.get_layout_box(
+                    Rectangle(
+                        Decimal(0),
+                        Decimal(0),
+                        Decimal(w),
+                        Decimal(w) * INVERSE_GOLDEN_RATIO,
+                    )
+                )
+
+                # IF the width goes out of bounds
+                # THEN go to the next iteration (hopefully allowing the LayoutElement to fit)
+                if landscape_box.get_width() > w:
+                    continue
+
+                # IF we didn't have a best landscape_box yet
+                # THEN whatever we have now is best
+                if best_landscape_box is None:
+                    best_landscape_box = landscape_box
+                    continue
+
+                # calculate the current ratio (width / height)
+                ratio: Decimal = landscape_box.get_width() / landscape_box.get_height()
+                best_ratio: Decimal = (
+                    best_landscape_box.get_width() / best_landscape_box.get_height()
+                )
+                if abs(ratio - GOLDEN_RATIO) < abs(best_ratio - GOLDEN_RATIO):
+                    best_landscape_box = landscape_box
+                    continue
+
+                # current_ratio will only every increase
+                # as soon as we go above the GOLDEN_RATIO we exit the loop
+                if ratio > GOLDEN_RATIO:
+                    break
+
+            except:
+                pass
+
+        # return
+        return best_landscape_box
+
+    def get_golden_ratio_portrait_box(self) -> typing.Optional[Rectangle]:
+        """
+        This function returns the layout box that fits this LayoutElement
+        and whose ratio of dimensions (height / width) are closest to the golden ratio.
+        :return:    the layout box (in portrait mode) with ratio closest to the golden ratio
+        """
+
+        # define golden ratio and its inverse
+        GOLDEN_RATIO: Decimal = Decimal(1.618)
+        INVERSE_GOLDEN_RATIO = Decimal(1) / GOLDEN_RATIO
+
+        # keep track of best landscape box
+        best_portrait_box: typing.Optional[Rectangle] = None
+
+        # try all possible widths
+        for h in range(0, 2048, 10):
+            try:
+                # try layout with the given width
+                portrait_box: Rectangle = self.get_layout_box(
+                    Rectangle(
+                        Decimal(0),
+                        Decimal(0),
+                        Decimal(h * INVERSE_GOLDEN_RATIO),
+                        Decimal(h),
+                    )
+                )
+
+                # IF the width goes out of bounds
+                # THEN go to the next iteration (hopefully allowing the LayoutElement to fit)
+                if portrait_box.get_height() > h:
+                    continue
+
+                # IF we didn't have a best portrait_box yet
+                # THEN whatever we have now is best
+                if best_portrait_box is None:
+                    best_portrait_box = portrait_box
+                    continue
+
+                # calculate the current ratio (width / height)
+                ratio: Decimal = portrait_box.get_height() / portrait_box.get_width()
+                best_ratio: Decimal = (
+                    best_portrait_box.get_height() / best_portrait_box.get_width()
+                )
+                if abs(ratio - GOLDEN_RATIO) < abs(best_ratio - GOLDEN_RATIO):
+                    best_portrait_box = portrait_box
+                    continue
+
+                # current_ratio will only every increase
+                # as soon as we go above the GOLDEN_RATIO we exit the loop
+                if ratio < GOLDEN_RATIO:
+                    break
+
+            except:
+                pass
+
+        # return
+        return best_portrait_box
+
+    def get_largest_landscape_box(self) -> typing.Optional[Rectangle]:
+        """
+        This function returns the largest (in landscape mode) box that will fit this LayoutElement.
+        For most (all) LayoutElements, this also ought to be the layout box with the smallest height, and largest width.
+        :return:    the largest layout box (in landscape mode)
+        """
+        try:
+            return self.get_layout_box(
+                Rectangle(Decimal(0), Decimal(0), Decimal(2048), Decimal(2048))
+            )
+        except:
+            return None
+
     def get_layout_box(self, available_space: Rectangle):
         """
         This function returns the previous result of layout
@@ -533,6 +670,33 @@ class LayoutElement:
         """
         return self._previous_paint_box
 
+    def get_smallest_landscape_box(self) -> typing.Optional[Rectangle]:
+        """
+        This function returns the smallest (in landscape mode) box that will fit this LayoutElement.
+        For most (all) LayoutElements, this also ought to be the layout box with the smallest width, and largest height.
+        :return:    the smallest layout box (in landscape mode)
+        """
+        max_width: Decimal = Decimal(2048)
+        min_width: Decimal = Decimal(0)
+        midpoint_width: Decimal = (max_width + min_width) / Decimal(2)
+        landscape_box: typing.Optional[Rectangle] = None
+        while abs(max_width - min_width) > Decimal(1):
+            try:
+                landscape_box = self.get_layout_box(
+                    Rectangle(Decimal(0), Decimal(0), midpoint_width, Decimal(2048))
+                )
+                assert landscape_box is not None
+                if landscape_box.get_width() > midpoint_width:
+                    min_width = midpoint_width
+                else:
+                    max_width = midpoint_width
+                midpoint_width = (max_width + min_width) / Decimal(2)
+            except:
+                break
+
+        # return
+        return landscape_box
+
     def paint(self, page: "Page", available_space: Rectangle) -> None:  # type: ignore[name-defined]
         """
         This method paints this LayoutElement on the given Page, in the available space
@@ -555,31 +719,26 @@ class LayoutElement:
         if self._border_bottom:
             vertical_border_width += self._border_width
 
+        # fmt: off
         cbox_available_space: Rectangle = Rectangle(
-            available_space.get_x()
-            + self._padding_left
-            + (self._border_width if self._border_left else Decimal(0)),
-            available_space.get_y()
-            + self._padding_bottom
-            + (self._border_width if self._border_bottom else Decimal(0)),
-            max(
-                Decimal(0),
-                available_space.get_width()
-                - self._padding_left
-                - self._padding_right
-                - horizontal_border_width,
-            ),
-            max(
-                Decimal(0),
-                available_space.get_height()
-                - self._padding_top
-                - self._padding_bottom
-                - vertical_border_width,
-            ),
+            available_space.get_x() + self._padding_left + (self._border_width if self._border_left else Decimal(0)),
+            available_space.get_y() + self._padding_bottom + (self._border_width if self._border_bottom else Decimal(0)),
+            max(Decimal(0), available_space.get_width() - self._padding_left - self._padding_right - horizontal_border_width),
+            max(Decimal(0), available_space.get_height() - self._padding_top - self._padding_bottom - vertical_border_width),
         )
+        # fmt: on
 
         # determine content_box
         cbox: Rectangle = self._get_content_box(cbox_available_space)
+        if round(cbox.get_height(), 2) > round(cbox_available_space.get_height(), 2):
+            # fmt: off
+            assert False, f"{self.__class__.__name__} is too tall to fit inside column / page. Needed {round(cbox.get_height(), 2)} pts, only {round(cbox_available_space.get_height(), 2)} pts available."
+            # fmt: on
+        if round(cbox.get_width(), 2) > round(cbox_available_space.get_width(), 2):
+            # fmt: off
+            self._get_content_box(cbox_available_space)
+            assert False, f"{self.__class__.__name__} is too wide to fit inside column / page. Needed {round(cbox.get_width(), 2)} pts, only {round(cbox_available_space.get_width(), 2)} pts available."
+            # fmt: on
 
         # take into account vertical_alignment
         delta_x: Decimal = Decimal(0)
@@ -602,22 +761,14 @@ class LayoutElement:
             cbox.x += delta_x
 
         # paint the background first
+        # fmt: off
         bgbox: Rectangle = Rectangle(
-            cbox.get_x()
-            - self._padding_left
-            - (self._border_width if self._border_left else Decimal(0)),
-            cbox.get_y()
-            - self._padding_bottom
-            - (self._border_width if self._border_bottom else Decimal(0)),
-            cbox.get_width()
-            + self._padding_left
-            + self._padding_right
-            + horizontal_border_width,
-            cbox.get_height()
-            + self._padding_top
-            + self._padding_bottom
-            + vertical_border_width,
+            cbox.get_x() - self._padding_left - (self._border_width if self._border_left else Decimal(0)),
+            cbox.get_y() - self._padding_bottom - (self._border_width if self._border_bottom else Decimal(0)),
+            cbox.get_width() + self._padding_left + self._padding_right + horizontal_border_width,
+            cbox.get_height() + self._padding_top + self._padding_bottom + vertical_border_width,
         )
+        # fmt: on
         self._paint_background(page, bgbox)
 
         # paint the borders

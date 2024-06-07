@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -8,7 +8,7 @@ The high-level tokenizer will use this first pass to then build complex objects 
 """
 import enum
 import io
-from typing import Optional
+import typing
 
 
 class TokenType(enum.IntEnum):
@@ -45,9 +45,10 @@ class Token:
     #
 
     def __init__(self, byte_offset: int, token_type: TokenType, bts: bytes):
+        # TODO: sort args
+        self._bytes: bytes = bts
         self._byte_offset: int = byte_offset
         self._token_type: TokenType = token_type
-        self._bytes: bytes = bts
 
     #
     # PRIVATE
@@ -60,24 +61,29 @@ class Token:
     def get_byte_offset(self) -> int:
         """
         Get the byte offset of this Token
+        :return:    the byte offset
         """
         return self._byte_offset
 
     def get_bytes(self) -> bytes:
         """
         Get the bytes of this Token
+        :return:    the bytes
         """
         return self._bytes
 
     def get_text(self, encoding: str = "latin1") -> str:
         """
         Get the text of this Token, using a given encoding (default: latin1)
+        :param encoding:    the encoding to be used (default is latin1)
+        :return:            the text
         """
         return self._bytes.decode(encoding)
 
     def get_token_type(self) -> TokenType:
         """
         Get the TokenType of this Token
+        :return:    the TokenType
         """
         return self._token_type
 
@@ -99,8 +105,8 @@ class LowLevelTokenizer:
     def __init__(self, io_source):
         self._io_source = io_source
         # fmt: off
-        self._is_pseudo_digit = {b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'+', b'-', b'.'}.__contains__
         self._is_delimiter = {b'\x00', b'\t', b'\n', b'\r', b'\x0c', b" ", b'%', b'(', b')', b'/', b'<', b'>', b'[', b']'}.__contains__
+        self._is_pseudo_digit = {b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'+', b'-', b'.'}.__contains__
         self._is_whitespace = {b'\x00', b'\t', b'\n', b'\r', b'\x0c', b' '}.__contains__
         # fmt: on
 
@@ -118,20 +124,22 @@ class LowLevelTokenizer:
     # PUBLIC
     #
 
-    def next_non_comment_token(self) -> Optional[Token]:
+    def next_non_comment_token(self) -> typing.Optional[Token]:
         """
         This function retrieves the next non-comment Token.
         It returns None if no such Token exists (end of stream/file)
+        :return:    the next non-comment Token
         """
         t = self.next_token()
         while t is not None and t.get_token_type() == TokenType.COMMENT:
             t = self.next_token()
         return t
 
-    def next_token(self) -> Optional[Token]:
+    def next_token(self) -> typing.Optional[Token]:
         """
         This function retrieves the next Token.
         It returns None if no such Token exists (end of stream/file)
+        :return:    the next Token
         """
         ch = self._next_byte()
         if len(ch) == 0:
@@ -264,11 +272,15 @@ class LowLevelTokenizer:
         SEEK_CUR or 1 – current stream position; offset may be negative
         SEEK_END or 2 – end of the stream; offset is usually negative
         Return the new absolute position.
+        :param pos:         the desired (relative) stream position
+        :param whence:      how the position should be interpreted (relative to what)
+        :return:            the new absolute position
         """
         return self._io_source.seek(pos, whence)
 
     def tell(self) -> int:
         """
         Return the current stream position.
+        :return:    the current stream position
         """
         return self._io_source.tell()

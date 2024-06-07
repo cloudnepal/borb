@@ -8,10 +8,11 @@ e.g. 97 0 R
 import io
 import logging
 import typing
-from typing import Any, Optional, Union
 
-from borb.io.read.transformer import ReadTransformerState, Transformer
-from borb.io.read.types import AnyPDFType, Reference
+from borb.io.read.transformer import ReadTransformerState
+from borb.io.read.transformer import Transformer
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Reference
 from borb.pdf.canvas.event.event_listener import EventListener
 from borb.pdf.xref.xref import XREF
 
@@ -43,23 +44,32 @@ class ReferenceTransformer(Transformer):
     #
 
     def can_be_transformed(
-        self, object: Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType]
+        self,
+        object: typing.Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType],
     ) -> bool:
         """
-        This function returns True if the object to be converted represents a Reference
+        This function returns True if the object to be transformed is a Reference
+        :param object:  the object to be transformed
+        :return:        True if the object is a Reference, False otherwise
         """
         return isinstance(object, Reference)
 
     def transform(
         self,
-        object_to_transform: Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
-        parent_object: Any,
-        context: Optional[ReadTransformerState] = None,
+        object_to_transform: typing.Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
+        parent_object: typing.Any,
+        context: typing.Optional[ReadTransformerState] = None,
         event_listeners: typing.List[EventListener] = [],
-    ) -> Any:
+    ) -> typing.Any:
         """
-        This function reads a Reference from a byte stream
+        This function transforms a PDF reference into a (borb) Reference Object
+        :param object_to_transform:     the reference to transform
+        :param parent_object:           the parent Object
+        :param context:                 the ReadTransformerState (containing passwords, etc)
+        :param event_listeners:         the EventListener objects that may need to be notified
+        :return:                        a Reference Object
         """
+
         # fmt: off
         assert isinstance(object_to_transform, Reference), "object_to_transform must be of type Reference"
         # fmt: on
@@ -108,10 +118,50 @@ class ReferenceTransformer(Transformer):
         src = context.source
         tok = context.tokenizer
 
-        # get reference
+        # IF the reference points to a parent object
+        # THEN explicitly resolve that parent and add it to the XREF cache
+        # this ensures these references are handled WITH decryption rather than simply being looked up
+        # by the XREF
+        matching_ref_in_xref: typing.Optional[Reference] = next(
+            iter(
+                [
+                    r
+                    for r in xref._entries
+                    if r.object_number == object_to_transform.object_number
+                ]
+            ),
+            None,
+        )
+        if (
+            matching_ref_in_xref is not None
+            and matching_ref_in_xref.parent_stream_object_number is not None
+        ):
+            parent_reference: Reference = Reference(
+                object_number=matching_ref_in_xref.parent_stream_object_number,
+                generation_number=matching_ref_in_xref.generation_number,
+            )
+            assert parent_reference.object_number is not None
+            xref._cache[parent_reference.object_number] = self.transform(
+                parent_reference,
+                parent_object=parent_object,
+                context=context,
+                event_listeners=[],
+            )
+
+        # get referenced object from XREF
         referenced_object = xref.get_object(object_to_transform, src, tok)
         if referenced_object is None:
             return None
+
+        # set reference on referenced object
+        # this ensures we can decrypt the object if needed
+        try:
+            referenced_object.set_reference(object_to_transform)
+        except:
+            logger.debug(
+                "Unable to set reference on object %s" % str(referenced_object)
+            )
+            pass
 
         # transform
         assert referenced_object is not None
@@ -125,7 +175,7 @@ class ReferenceTransformer(Transformer):
         if transformed_referenced_object is not None:
             self._cache[object_to_transform] = transformed_referenced_object
 
-        # set reference
+        # set reference on transformed object
         try:
             transformed_referenced_object.set_reference(object_to_transform)
         except:

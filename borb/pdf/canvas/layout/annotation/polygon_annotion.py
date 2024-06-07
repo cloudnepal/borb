@@ -9,8 +9,11 @@ and last vertex are not implicitly connected.
 import typing
 from decimal import Decimal
 
-from borb.io.read.types import Name, List, Decimal as bDecimal
-from borb.pdf.canvas.color.color import HexColor, Color
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
 
@@ -31,7 +34,6 @@ class PolygonAnnotation(Annotation):
         points: typing.List[typing.Tuple[Decimal, Decimal]],
         stroke_color: Color = HexColor("000000"),
     ):
-
         # must be at least 3 points
         assert len(points) >= 3
 
@@ -58,7 +60,7 @@ class PolygonAnnotation(Annotation):
         # (Required) An array of numbers (see Table 174) specifying the width and
         # dash pattern that shall represent the alternating horizontal and vertical
         # coordinates, respectively, of each vertex, in default user space.
-        self[Name("Vertices")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self[Name("Vertices")] = List().set_is_inline(True)
         for p in points:
             self["Vertices"].append(bDecimal(p[0]))
             self["Vertices"].append(bDecimal(p[1]))
@@ -69,7 +71,7 @@ class PolygonAnnotation(Annotation):
         # defined, respectively, by the first and second pairs of coordinates, (x 1 , y 1 )
         # and (x 2 , y 2 ), in the L array. Table 176 shows the possible values. Default
         # value: [ /None /None ].
-        self[Name("LE")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self[Name("LE")] = List().set_is_inline(True)
         self["LE"].append(Name("None"))
         self["LE"].append(Name("None"))
 

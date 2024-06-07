@@ -10,7 +10,11 @@ import datetime
 import typing
 from decimal import Decimal
 
-from borb.io.read.types import Dictionary, Name, List, Decimal as bDecimal, String
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import String
 from borb.pdf.canvas.color.color import Color
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 
@@ -29,11 +33,11 @@ class Annotation(Dictionary):
     def __init__(
         self,
         bounding_box: Rectangle,
-        contents: typing.Optional[str] = None,
+        border_width: typing.Optional[Decimal] = None,
         color: typing.Optional[Color] = None,
+        contents: typing.Optional[str] = None,
         horizontal_corner_radius: typing.Optional[Decimal] = None,
         vertical_corner_radius: typing.Optional[Decimal] = None,
-        border_width: typing.Optional[Decimal] = None,
     ):
         super(Annotation, self).__init__()
 
@@ -43,7 +47,7 @@ class Annotation(Dictionary):
 
         # (Required) The annotation rectangle, defining the location of the
         # annotation on the page in default user space units.
-        self[Name("Rect")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self[Name("Rect")] = List().set_is_inline(True)
         self["Rect"].append(bDecimal(bounding_box.get_x()))
         self["Rect"].append(bDecimal(bounding_box.get_y()))
         self["Rect"].append(bDecimal(bounding_box.get_x() + bounding_box.get_width()))
@@ -86,7 +90,7 @@ class Annotation(Dictionary):
         # subdictionary (see Section 12.5.5, “Appearance Streams”).
         # self[Name("AS")] = None
 
-        # Optional) An array specifying the characteristics of the annotation’s
+        # (Optional) An array specifying the characteristics of the annotation’s
         # border, which shall be drawn as a rounded rectangle.
         # (PDF 1.0) The array consists of three numbers defining the horizontal
         # corner radius, vertical corner radius, and border width, all in default user
@@ -102,7 +106,7 @@ class Annotation(Dictionary):
             and vertical_corner_radius is not None
             and border_width is not None
         ):
-            self[Name("Border")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+            self[Name("Border")] = List().set_is_inline(True)
             self["Border"].append(bDecimal(horizontal_corner_radius))
             self["Border"].append(bDecimal(vertical_corner_radius))
             self["Border"].append(bDecimal(border_width))
@@ -115,7 +119,7 @@ class Annotation(Dictionary):
         # The number of array elements determines the colour space in which the
         # colour shall be defined
         if color is not None:
-            self[Name("C")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+            self[Name("C")] = List().set_is_inline(True)
             self["C"].append(bDecimal(color.to_rgb().red))
             self["C"].append(bDecimal(color.to_rgb().green))
             self["C"].append(bDecimal(color.to_rgb().blue))

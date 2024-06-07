@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -11,7 +11,7 @@ required.
 """
 import typing
 from decimal import Decimal
-from math import atan, ceil, cos, degrees, exp, floor, log, sin, sqrt
+import math
 
 
 class PostScriptEval:
@@ -37,10 +37,13 @@ class PostScriptEval:
     #
 
     @staticmethod
-    def evaluate(s: str, args: typing.List[Decimal]) -> typing.List[Decimal]:
+    def evaluate(s: str, args: typing.List[Decimal] = []) -> typing.List[Decimal]:
         """
         This function evaluates a postscript str, using args as the (initial) stack.
         This function returns a typing.List[Decimal], or throws an assertion error
+        :param s:       the (postfix) str to evaluate
+        :param args:    the (initial) stack
+        :return:        the resulting stack
         """
         stk: typing.List[typing.Union[Decimal, bool]] = []
         stk += args
@@ -89,7 +92,6 @@ class PostScriptEval:
 
         i: int = 0
         while i < len(s):
-
             # whitespace
             if s[i] in " \n\t":
                 i += 1
@@ -164,7 +166,7 @@ class PostScriptEval:
                     # fmt: on
                     arg0 = stk[-1]
                     stk.pop(len(stk) - 1)
-                    stk.append(Decimal(atan(arg0)))
+                    stk.append(Decimal(math.atan(arg0)))
                     continue
                 # ceiling
                 if operator == "ceiling":
@@ -174,7 +176,7 @@ class PostScriptEval:
                     # fmt: on
                     arg0 = stk[-1]
                     stk.pop(len(stk) - 1)
-                    stk.append(Decimal(ceil(arg0)))
+                    stk.append(Decimal(math.ceil(arg0)))
                     continue
                 # cos
                 if operator == "cos":
@@ -184,7 +186,7 @@ class PostScriptEval:
                     # fmt: on
                     arg0 = stk[-1]
                     stk.pop(len(stk) - 1)
-                    stk.append(Decimal(cos(degrees(arg0))))
+                    stk.append(Decimal(math.cos(math.degrees(arg0))))
                     continue
                 # cvi
                 if operator == "cvi":
@@ -253,7 +255,7 @@ class PostScriptEval:
                         arg0, Decimal
                     ), "Unable to apply operator exp, unexpected type"
                     stk.pop(len(stk) - 1)
-                    stk.append(Decimal(exp(arg0)))
+                    stk.append(Decimal(math.exp(arg0)))
                     continue
                 # false
                 if operator == "false":
@@ -269,7 +271,7 @@ class PostScriptEval:
                         arg0, Decimal
                     ), "Unable to apply operator floor, unexpected type"
                     stk.pop(len(stk) - 1)
-                    stk.append(Decimal(floor(arg0)))
+                    stk.append(Decimal(math.floor(arg0)))
                     continue
                 # ge
                 if operator == "ge":
@@ -330,7 +332,7 @@ class PostScriptEval:
                     arg0 = stk[-1]
                     assert isinstance(arg0, Decimal)
                     stk.pop(len(stk) - 1)
-                    stk.append(Decimal(log(arg0)))
+                    stk.append(Decimal(math.log(arg0)))
                     continue
                 # log
                 if operator == "log":
@@ -340,7 +342,7 @@ class PostScriptEval:
                     arg0 = stk[-1]
                     assert isinstance(arg0, Decimal)
                     stk.pop(len(stk) - 1)
-                    stk.append(Decimal(log(arg0, Decimal(10))))
+                    stk.append(Decimal(math.log(arg0, Decimal(10))))
                     continue
                 # lt
                 if operator == "lt":
@@ -447,7 +449,7 @@ class PostScriptEval:
                     arg0 = stk[-1]
                     assert isinstance(arg0, Decimal)
                     stk.pop(len(stk) - 1)
-                    stk.append(Decimal(sin(degrees(arg0))))
+                    stk.append(Decimal(math.sin(math.degrees(arg0))))
                     continue
                 # sqrt
                 if operator == "sqrt":
@@ -457,7 +459,7 @@ class PostScriptEval:
                     arg0 = stk[-1]
                     assert isinstance(arg0, Decimal)
                     stk.pop(len(stk) - 1)
-                    stk.append(Decimal(sqrt(arg0)))
+                    stk.append(Decimal(math.sqrt(arg0)))
                     continue
                 # sub
                 if operator == "sub":

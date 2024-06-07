@@ -10,9 +10,12 @@ Type entry, if present, is XObject.
 import io
 import typing
 
-import PIL  # type: ignore [import]
+from PIL import Image as PILImageModule
 
-from borb.io.read.types import AnyPDFType, Dictionary, Name, Stream
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
 from borb.pdf.canvas.event.image_render_event import ImageRenderEvent
 from borb.pdf.canvas.operator.canvas_operator import CanvasOperator
 
@@ -30,8 +33,20 @@ class Do(CanvasOperator):
     "PostScript XObjects").
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("Do", 1)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -41,6 +56,10 @@ class Do(CanvasOperator):
     ) -> None:
         """
         Invoke the Do operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
 
         # get Page
@@ -52,8 +71,9 @@ class Do(CanvasOperator):
         xobject = canvas_stream_processor.get_resource("XObject", str(operands[0]))
 
         # render Image objects
-        if isinstance(xobject, PIL.Image.Image):
+        if isinstance(xobject, PILImageModule.Image):
             for l in event_listeners:
+                # noinspection PyProtectedMember
                 l._event_occurred(
                     ImageRenderEvent(
                         graphics_state=canvas.graphics_state, image=xobject
@@ -67,7 +87,6 @@ class Do(CanvasOperator):
             and "Subtype" in xobject
             and xobject["Subtype"] == "Form"
         ):
-
             # execute XObject
             xobject_resources: Dictionary = (
                 xobject["Resources"] if "Resources" in xobject else {}

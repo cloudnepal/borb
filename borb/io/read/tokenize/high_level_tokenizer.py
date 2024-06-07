@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -7,22 +7,21 @@ Low-level tokenization aims to separate numbers, strings, names, comments, start
 The high-level tokenizer will use this first pass to then build complex objects (streams, dictionaries, etc)
 """
 import re
-from typing import Optional
+import typing
 
-from borb.io.read.tokenize.low_level_tokenizer import LowLevelTokenizer, TokenType
-from borb.io.read.types import (
-    AnyPDFType,
-    Boolean,
-    CanvasOperatorName,
-    Decimal,
-    Dictionary,
-    HexadecimalString,
-    List,
-    Name,
-    Reference,
-    Stream,
-    String,
-)
+from borb.io.read.tokenize.low_level_tokenizer import LowLevelTokenizer
+from borb.io.read.tokenize.low_level_tokenizer import TokenType
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Boolean
+from borb.io.read.types import CanvasOperatorName
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import HexadecimalString
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import Reference
+from borb.io.read.types import Stream
+from borb.io.read.types import String
 
 
 class HighLevelTokenizer(LowLevelTokenizer):
@@ -51,6 +50,7 @@ class HighLevelTokenizer(LowLevelTokenizer):
         """
         This function processes the next tokens and returns a List.
         It fails and throws various errors if the next tokens do not represent a List.
+        :return:    a List
         """
         token = self.next_non_comment_token()
         assert token is not None
@@ -80,6 +80,7 @@ class HighLevelTokenizer(LowLevelTokenizer):
         """
         This function processes the next tokens and returns a Dictionary.
         It fails and throws various errors if the next tokens do not represent a Dictionary.
+        :return:    a Dictionary
         """
         token = self.next_non_comment_token()
         assert token is not None
@@ -87,7 +88,6 @@ class HighLevelTokenizer(LowLevelTokenizer):
 
         out_dict = Dictionary()
         while True:
-
             # attempt to read name token
             token = self.next_non_comment_token()
             assert token is not None
@@ -108,10 +108,11 @@ class HighLevelTokenizer(LowLevelTokenizer):
 
         return out_dict
 
-    def read_indirect_object(self) -> Optional[AnyPDFType]:
+    def read_indirect_object(self) -> typing.Optional[AnyPDFType]:
         """
         This function processes the next tokens and returns an AnyPDFType.
         It fails and throws various errors if the next tokens do not represent an indirect pdf object.
+        :return:    an (indirect) PDF object
         """
 
         # read object number
@@ -145,7 +146,7 @@ class HighLevelTokenizer(LowLevelTokenizer):
         # read obj
         value = self.read_object()
         if value is not None:
-            value.set_reference(  # type: ignore[union-attr]
+            value.set_reference(
                 Reference(
                     object_number=object_number, generation_number=generation_number
                 )
@@ -154,10 +155,11 @@ class HighLevelTokenizer(LowLevelTokenizer):
         # return
         return value
 
-    def read_indirect_reference(self) -> Optional[Reference]:
+    def read_indirect_reference(self) -> typing.Optional[Reference]:
         """
         This function processes the next tokens and returns an indirect reference.
         It fails and throws various errors if the next tokens do not represent an indirect reference.
+        :return:    an indirect Reference
         """
 
         # read object number
@@ -194,10 +196,12 @@ class HighLevelTokenizer(LowLevelTokenizer):
             generation_number=generation_number,
         )
 
-    def read_object(self, xref: Optional["XREF"] = None) -> Optional[AnyPDFType]:  # type: ignore [name-defined]
+    def read_object(self, xref: typing.Optional["XREF"] = None) -> typing.Optional[AnyPDFType]:  # type: ignore[name-defined]
         """
         This function processes the next tokens and returns an AnyPDFType.
         It fails and throws various errors if the next tokens do not represent a pdf object.
+        :param xref:    the XREF table
+        :return:        a PDF Object
         """
         token = self.next_non_comment_token()
         if token is None or len(token.get_text()) == 0:
@@ -239,7 +243,7 @@ class HighLevelTokenizer(LowLevelTokenizer):
         # numbers
         if token.get_token_type() == TokenType.NUMBER:
             self.seek(self.tell() + len(token.get_text()))
-            return Decimal(Decimal(token.get_text()))
+            return bDecimal(token.get_text())
 
         # boolean
         if token.get_token_type() == TokenType.OTHER and token.get_text() in [
@@ -270,10 +274,12 @@ class HighLevelTokenizer(LowLevelTokenizer):
         # default
         return None
 
-    def read_stream(self, xref: Optional["XREF"] = None) -> Optional[Stream]:  # type: ignore [name-defined]
+    def read_stream(self, xref: typing.Optional["XREF"] = None) -> typing.Optional[Stream]:  # type: ignore[name-defined]
         """
         This function processes the next tokens and returns a Stream.
         It fails and throws various errors if the next tokens do not represent a Stream.
+        :param xref:    the XREF table
+        :return:        a Stream
         """
         byte_offset = self.tell()
 

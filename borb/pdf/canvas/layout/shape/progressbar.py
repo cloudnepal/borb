@@ -9,9 +9,11 @@ stroke_color. This implementation of ProgressBar is roughly size 12 font wide.
 import typing
 from decimal import Decimal
 
-from borb.pdf.canvas.color.color import Color, HexColor
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
-from borb.pdf.canvas.layout.layout_element import LayoutElement, Alignment
+from borb.pdf.canvas.layout.layout_element import Alignment
+from borb.pdf.canvas.layout.layout_element import LayoutElement
 
 
 class ProgressBar(LayoutElement):
@@ -95,7 +97,6 @@ class ProgressBar(LayoutElement):
         )
 
     def _paint_content_box(self, page: "Page", content_box: Rectangle) -> None:  # type: ignore[name-defined]
-
         # draw rectangle background
         fill_rgb = (self._fill_color or HexColor("f0f0f0")).to_rgb()
         content = " q %f %f %f RG %f %f %f rg 0.1 w " % (

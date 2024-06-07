@@ -6,10 +6,9 @@ It reads bytes from a PDF document, and converts it to JSON-like datastructures.
 """
 import io
 import typing
-from typing import Optional
 
-from borb.io.read.types import AnyPDFType, Reference
-from borb.io.write.conformance_level import ConformanceLevel
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Reference
 
 
 class WriteTransformerState:
@@ -29,12 +28,14 @@ class WriteTransformerState:
 
     def __init__(
         self,
-        destination: Optional[typing.Union[io.BufferedIOBase, io.RawIOBase]] = None,
-        root_object: Optional[AnyPDFType] = None,
+        destination: typing.Optional[
+            typing.Union[io.BufferedIOBase, io.RawIOBase]
+        ] = None,
+        root_object: typing.Optional[AnyPDFType] = None,
     ):
         # fmt: off
         self.destination = destination                                                      # this is the destination to write to (file, byte-buffer, etc)
-        self.root_object: Optional[AnyPDFType] = root_object                                # this is the root object (PDF)
+        self.root_object: typing.Optional[AnyPDFType] = root_object                         # this is the root object (PDF)
         self.indirect_objects_by_id: typing.Dict[int, AnyPDFType] = {}                      # these are the indirect objects (by id)
         self.indirect_objects_by_hash: typing.Dict[int, typing.List[AnyPDFType]] = {}       # these are the indirect objects (by hash)
         self.resolved_references: typing.List[Reference] = []                               # these references have already been written
@@ -73,7 +74,7 @@ class Transformer:
     def _end_object(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState],
+        context: typing.Optional[WriteTransformerState],
     ):
         """
         This function writes the "endobj" bytes whenever a direct object needs to be closed
@@ -87,7 +88,7 @@ class Transformer:
 
     @staticmethod
     def _hash(obj: typing.Any) -> int:
-        h: Optional[int] = None
+        h: typing.Optional[int] = None
         # hash
         try:
             h = hash(obj)
@@ -105,7 +106,7 @@ class Transformer:
     def _start_object(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState],
+        context: typing.Optional[WriteTransformerState],
     ):
         """
         This function starts a new direct object by writing
@@ -153,7 +154,7 @@ class Transformer:
         handler._parent = self
         return self
 
-    def can_be_transformed(self, any: AnyPDFType):
+    def can_be_transformed(self, object: AnyPDFType):
         """
         This function returns True if this WriteBaseTransformer can transform the input object,
         false otherwise
@@ -169,7 +170,7 @@ class Transformer:
         """
         is_unique: bool = False
         try:
-            is_unique = object.is_unique()  # type: ignore[union-attr]
+            is_unique = object.is_unique()
         except:
             pass
 
@@ -197,18 +198,18 @@ class Transformer:
         # generate new object number
         existing_obj_numbers = set(
             [
-                item.get_reference().object_number  # type: ignore [union-attr]
+                item.get_reference().object_number  # type: ignore[union-attr]
                 for sublist in [v for k, v in context.indirect_objects_by_hash.items()]
                 for item in sublist
             ]
         )
         obj_number = len(existing_obj_numbers) + 1
-        while obj_number in existing_obj_numbers:  # type: ignore [union-attr]
+        while obj_number in existing_obj_numbers:  # type: ignore[union-attr]
             obj_number += 1
 
         # build reference
         ref = Reference(object_number=obj_number)
-        object.set_reference(ref)  # type: ignore [union-attr]
+        object.set_reference(ref)
 
         # insert into context.indirect_objects_by_hash
         if obj_hash in context.indirect_objects_by_hash:
@@ -238,7 +239,7 @@ class Transformer:
     def transform(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState] = None,
+        context: typing.Optional[WriteTransformerState] = None,
     ):
         """
         This method writes an object (of type AnyPDFType) to a byte stream (specified in the WriteTransformerState)

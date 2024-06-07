@@ -7,8 +7,11 @@ underlines (PDF 1.4) in the text of a document. When opened, they shall display 
 the text of the associated note. Table 179 shows the annotation dictionary entries specific to these types of
 annotations.
 """
-from borb.io.read.types import Name, List, Decimal as bDecimal
-from borb.pdf.canvas.color.color import HexColor, Color
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
 
@@ -28,18 +31,17 @@ class UnderlineAnnotation(Annotation):
     def __init__(
         self, bounding_box: Rectangle, stroke_color: Color = HexColor("faed27")
     ):
-
         super(UnderlineAnnotation, self).__init__(
             bounding_box=bounding_box, color=stroke_color
         )
 
         # (Required) The type of annotation that this dictionary describes; shall
-        # be Redact for a redaction annotation.
+        # be Underline for a underline annotation.
         self[Name("Subtype")] = Name("Underline")
 
         # (Required) An array of 8 × n numbers specifying the coordinates of n
         # quadrilaterals in default user space. Each quadrilateral shall
-        # encompasses a word or group of contiguous words in the text
+        # encompass a word or group of contiguous words in the text
         # underlying the annotation. The coordinates for each quadrilateral shall
         # be given in the order
         self[Name("QuadPoints")] = List()

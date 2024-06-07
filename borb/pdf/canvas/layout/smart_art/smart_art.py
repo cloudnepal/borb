@@ -14,21 +14,28 @@ import types
 import typing
 from decimal import Decimal
 
-from borb.pdf.canvas.layout.text.paragraph import Paragraph
-from borb.pdf.canvas.layout.table.table import Table, TableCell
-from borb.pdf.canvas.layout.table.flexible_column_width_table import (
-    FlexibleColumnWidthTable,
-)
-from borb.pdf.canvas.layout.list.list import List
-from borb.pdf.canvas.layout.list.unordered_list import UnorderedList
-from borb.pdf.canvas.color.color import HexColor, Color
-from borb.pdf.canvas.layout.image.image import Image
-from borb.pdf.page.page import Page
-from borb.pdf.canvas.layout.shape.connected_shape import ConnectedShape
-from borb.pdf.canvas.layout.page_layout.inline_flow import InlineFlow
+# fmt: off
+from borb.pdf.canvas.layout.text.line_of_text import LineOfText
+from borb.pdf.canvas.layout.emoji.emoji import Emoji
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
-from borb.pdf.canvas.layout.layout_element import LayoutElement, Alignment
+from borb.pdf.canvas.layout.image.image import Image
+from borb.pdf.canvas.layout.layout_element import Alignment
+from borb.pdf.canvas.layout.layout_element import LayoutElement
+from borb.pdf.canvas.layout.list.unordered_list import UnorderedList
+from borb.pdf.canvas.layout.page_layout.inline_flow import InlineFlow
+from borb.pdf.canvas.layout.shape.connected_shape import ConnectedShape
+from borb.pdf.canvas.layout.table.flexible_column_width_table import FlexibleColumnWidthTable
+from borb.pdf.canvas.layout.table.table import TableCell
+from borb.pdf.canvas.layout.text.chunk_of_text import ChunkOfText
+from borb.pdf.canvas.layout.text.heterogeneous_paragraph import HeterogeneousParagraph
+from borb.pdf.canvas.layout.text.paragraph import Paragraph
 from borb.pdf.canvas.line_art.line_art_factory import LineArtFactory
+from borb.pdf.page.page import Page
+
+
+# fmt: on
 
 
 class SmartArt:
@@ -39,13 +46,25 @@ class SmartArt:
     while others simply enhance the appearance of a bulleted list.
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
+
     @staticmethod
     def alternating_picture_list(
-        texts: typing.List[str],
         pictures: typing.List[str],
-        font_size: Decimal = Decimal(12),
+        texts: typing.List[str],
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
     ) -> LayoutElement:
         """
         Use to show a series of pictures from top to bottom. Text appears alternately on the right or left of the picture.
@@ -77,7 +96,7 @@ class SmartArt:
                             font_size=font_size,
                             background_color=background_color,
                         ),
-                        col_span=2,
+                        column_span=2,
                         border_left=False,
                         border_top=(True if i != 0 else False),
                         border_bottom=(True if i != N - 1 else False),
@@ -118,7 +137,7 @@ class SmartArt:
                         ),
                         border_right=False,
                         border_bottom=(True if i != N - 1 else False),
-                        col_span=2,
+                        column_span=2,
                         background_color=background_color,
                         border_color=HexColor("FFFFFF"),
                         border_width=font_size / 2,
@@ -134,10 +153,10 @@ class SmartArt:
     def ascending_block_list(
         text_level_1: typing.List[str],
         text_level_2: typing.List[typing.List[str]],
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         Use to show groups of related ideas or lists of information.
@@ -233,10 +252,10 @@ class SmartArt:
     @staticmethod
     def basic_bending_process(
         text: typing.List[str],
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         Use to show a long or non-linear sequence or steps in a task, process, or workflow.
@@ -335,7 +354,6 @@ class SmartArt:
 
             # add <empty> + <arrow down>
             if len(elements_to_add) > 0:
-
                 # add arrow down
                 if filling_left_to_right:
                     for _ in range(0, ncols * 2 - 2):
@@ -378,10 +396,10 @@ class SmartArt:
     @staticmethod
     def closed_chevron_process(
         text: typing.List[str],
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         Use to show a progression, a timeline, or sequential steps in a task, process, or workflow, or to emphasize movement or direction.
@@ -504,9 +522,9 @@ class SmartArt:
     def descending_block_list(
         text_level_1: typing.List[str],
         text_level_2: typing.List[typing.List[str]],
-        font_size: Decimal = Decimal(12),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
     ) -> LayoutElement:
         """
         Use to show groups of related ideas or lists of information.
@@ -603,10 +621,10 @@ class SmartArt:
     def horizontal_bullet_list(
         text_level_1: typing.List[str],
         text_level_2: typing.List[typing.List[str]],
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         A horizontal bullet list is used to show non-sequential information or grouped data, yet it will not affect the outcome of the other data.
@@ -684,10 +702,10 @@ class SmartArt:
     @staticmethod
     def horizontal_process(
         text: typing.List[str],
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         Use to show a progression or sequential steps in a task, process, or workflow.
@@ -742,10 +760,10 @@ class SmartArt:
     @staticmethod
     def matrix(
         text: typing.List[str],
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         A matrix is a rectangular array of elements, arranged in rows and columns, and can be used to show the placement of concepts along two axes.
@@ -861,10 +879,10 @@ class SmartArt:
     @staticmethod
     def opposing_ideas(
         text: typing.List[str],
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         Use to show two opposing or contrasting ideas. Has two Level 1 items.
@@ -879,11 +897,20 @@ class SmartArt:
         assert len(text) > 0
         assert font_size > 0
         table: FlexibleColumnWidthTable = FlexibleColumnWidthTable(
-            number_of_columns=4, number_of_rows=3
+            number_of_columns=4, number_of_rows=1
         )
 
         # row 1
-        table.add(Paragraph(" "))
+        table.add(
+            ConnectedShape(
+                LineArtFactory.arrow_up(
+                    Rectangle(Decimal(0), Decimal(0), Decimal(32), Decimal(32))
+                ),
+                stroke_color=background_color,
+                fill_color=background_color,
+                vertical_alignment=Alignment.MIDDLE,
+            )
+        )
         table.add(
             TableCell(
                 Paragraph(
@@ -892,7 +919,6 @@ class SmartArt:
                     font_color=font_color,
                     background_color=background_color,
                 ),
-                row_span=3,
                 border_radius_bottom_left=Decimal(20),
                 background_color=background_color,
             )
@@ -905,21 +931,8 @@ class SmartArt:
                     font_color=font_color,
                     background_color=foreground_color,
                 ),
-                row_span=3,
                 border_radius_top_right=Decimal(20),
                 background_color=foreground_color,
-            )
-        )
-        table.add(Paragraph(" "))
-
-        # row 2
-        table.add(
-            ConnectedShape(
-                LineArtFactory.arrow_up(
-                    Rectangle(Decimal(0), Decimal(0), Decimal(32), Decimal(32))
-                ),
-                stroke_color=background_color,
-                fill_color=background_color,
             )
         )
         table.add(
@@ -929,12 +942,9 @@ class SmartArt:
                 ),
                 stroke_color=foreground_color,
                 fill_color=foreground_color,
+                vertical_alignment=Alignment.MIDDLE,
             )
         )
-
-        # row 3
-        table.add(Paragraph(" "))
-        table.add(Paragraph(" "))
 
         # set global properties
         table.set_padding_on_all_cells(font_size, font_size, font_size, font_size)
@@ -945,11 +955,11 @@ class SmartArt:
 
     @staticmethod
     def picture_list(
-        texts: typing.List[str],
         pictures: typing.List[str],
-        font_size: Decimal = Decimal(12),
+        texts: typing.List[str],
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
     ) -> LayoutElement:
         """
         Use to show a series of pictures from top to bottom. Text appears on the right of the picture.
@@ -992,7 +1002,7 @@ class SmartArt:
                         font_size=font_size,
                         background_color=background_color,
                     ),
-                    col_span=2,
+                    column_span=2,
                     border_right=False,
                     border_left=True,
                     border_top=(True if i != 0 else False),
@@ -1011,10 +1021,10 @@ class SmartArt:
     @staticmethod
     def table_hierarcy(
         text: typing.Any,
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         Use to show groups of information built from top to bottom, and the hierarchies within each group.
@@ -1072,7 +1082,7 @@ class SmartArt:
                         border_bottom=False if j == number_of_rows - 1 else True,
                         border_width=font_size / 2,
                         border_color=HexColor("ffffff"),
-                        col_span=_cols(e),
+                        column_span=_cols(e),
                         background_color=c,
                     )
                 )
@@ -1086,13 +1096,70 @@ class SmartArt:
         return table
 
     @staticmethod
+    def tags(
+        s: typing.List[str],
+        background_color: Color = HexColor("#8BBD8B"),
+        font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
+    ) -> LayoutElement:
+        """
+
+        :param s:                   the typing.List[str] to be converted to tags
+        :param foreground_color:    the foreground_color (unused)
+        :param background_color:    the background_color of the tags
+        :param font_color:          the font_color of the tags
+        :param font_size:           the font_size of the tags
+        :return:
+        """
+
+        # get unique list of tags
+        uniq: typing.List[str] = []
+        for x in s:
+            if x.upper() not in [y.upper() for y in uniq]:
+                uniq.append(x)
+        uniq.sort()
+
+        # build typing.List[ChunkOfText]
+        chunks: typing.List[
+            typing.Union[ChunkOfText, LineOfText, Emoji, Image, str]
+        ] = []
+        for t in uniq:
+            chunks.append(
+                ChunkOfText(
+                    t,
+                    font_size=font_size,
+                    font_color=font_color,
+                    background_color=background_color,
+                    border_color=background_color,
+                    border_top=True,
+                    border_right=True,
+                    border_bottom=True,
+                    border_left=True,
+                    border_radius_top_right=Decimal(5),
+                    border_radius_bottom_right=Decimal(5),
+                    border_radius_bottom_left=Decimal(5),
+                    border_radius_top_left=Decimal(5),
+                    padding_top=Decimal(2),
+                    padding_right=Decimal(2),
+                    padding_bottom=Decimal(0),
+                    padding_left=Decimal(2),
+                )
+            )
+            chunks.append(ChunkOfText(" ", font_size=font_size))
+        chunks = chunks[:-1]
+
+        # return
+        return HeterogeneousParagraph(chunks)
+
+    @staticmethod
     def vertical_bullet_list(
         text_level_1: typing.List[str],
         text_level_2: typing.List[typing.List[str]],
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         A vertical bullet list is used to show non-sequential information or grouped data, yet it will not affect the outcome of the other data.
@@ -1161,10 +1228,10 @@ class SmartArt:
     @staticmethod
     def vertical_process(
         text: typing.List[str],
-        font_size: Decimal = Decimal(12),
-        foreground_color: Color = HexColor("#6CAE75"),
         background_color: Color = HexColor("#8BBD8B"),
         font_color: Color = HexColor("#FFFFFF"),
+        font_size: Decimal = Decimal(12),
+        foreground_color: Color = HexColor("#6CAE75"),
     ) -> LayoutElement:
         """
         Use to show a progression or sequential steps in a task, process, or workflow.

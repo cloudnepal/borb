@@ -4,10 +4,12 @@
 """
 This implementation of WriteBaseTransformer is responsible for writing Name objects
 """
-from typing import Optional
+import typing
 
-from borb.io.read.types import AnyPDFType, Name
-from borb.io.write.transformer import Transformer, WriteTransformerState
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Name
+from borb.io.write.transformer import Transformer
+from borb.io.write.transformer import WriteTransformerState
 
 
 class NameTransformer(Transformer):
@@ -27,19 +29,24 @@ class NameTransformer(Transformer):
     # PUBLIC
     #
 
-    def can_be_transformed(self, any: AnyPDFType):
+    def can_be_transformed(self, object: AnyPDFType):
         """
-        This function returns True if the object to be converted represents a Name object
+        This function returns True if the object to be transformed is a Name
+        :param object:  the object to be transformed
+        :return:        True if the object is a Name, False otherwise
         """
-        return isinstance(any, Name)
+        return isinstance(object, Name)
 
     def transform(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState] = None,
+        context: typing.Optional[WriteTransformerState] = None,
     ):
         """
-        This method writes a Name to a byte stream
+        This function transforms a Name Object into a byte stream
+        :param object_to_transform:     the Name Object to transform
+        :param context:                 the WriteTransformerState (containing passwords, etc)
+        :return:                        a (serialized) Name Object
         """
         assert context is not None
         assert context.destination is not None

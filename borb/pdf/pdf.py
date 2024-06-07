@@ -10,19 +10,18 @@
 """
 import io
 import typing
-from typing import List, Union
 
-from borb.io.read.any_object_transformer import (
-    AnyObjectTransformer as ReadAnyObjectTransformer,
-)
+# fmt: off
+from borb.io.read.any_object_transformer import AnyObjectTransformer as ReadAnyObjectTransformer
 from borb.io.read.transformer import ReadTransformerState
-from borb.io.write.any_object_transformer import (
-    AnyObjectTransformer as WriteAnyObjectTransformer,
-)
+from borb.io.write.any_object_transformer import AnyObjectTransformer as WriteAnyObjectTransformer
 from borb.io.write.transformer import WriteTransformerState
-from borb.license.usage_statistics import UsageStatistics
+from borb.license.async_usage_statistics_with_fair_use_warning import AsyncUsageStatisticsWithFairUseWarning
 from borb.pdf.canvas.event.event_listener import EventListener
 from borb.pdf.document.document import Document
+
+
+# fmt: on
 
 
 class PDF:
@@ -55,13 +54,15 @@ class PDF:
 
     @staticmethod
     def dumps(
-        file: Union[io.BufferedIOBase, io.RawIOBase],
+        file: typing.Union[io.BufferedIOBase, io.RawIOBase],
         document: Document,
     ) -> None:
         """
         This function writes a Document to a byte-stream output (which may be presented as an io.BufferedIOBase o io.RawIOBase)
         """
-        UsageStatistics.send_usage_statistics("PDF.dumps", document)
+        AsyncUsageStatisticsWithFairUseWarning.send_usage_statistics(
+            document=document, event_name="PDF.dumps"
+        )
         WriteAnyObjectTransformer().transform(
             object_to_transform=document,
             context=WriteTransformerState(
@@ -73,8 +74,8 @@ class PDF:
 
     @staticmethod
     def loads(
-        file: Union[io.BufferedIOBase, io.RawIOBase],
-        event_listeners: List[EventListener] = [],
+        file: typing.Union[io.BufferedIOBase, io.RawIOBase],
+        event_listeners: typing.List[EventListener] = [],
         password: typing.Optional[str] = None,
     ) -> Document:
         """
@@ -87,5 +88,7 @@ class PDF:
             context=ReadTransformerState(password=password),
             event_listeners=event_listeners,
         )
-        UsageStatistics.send_usage_statistics("PDF.loads", document)
+        AsyncUsageStatisticsWithFairUseWarning.send_usage_statistics(
+            document=document, event_name="PDF.loads"
+        )
         return document

@@ -11,19 +11,22 @@ import math
 import typing
 from decimal import Decimal
 
+# fmt: off
 from borb.datastructure.disjoint_set import disjointset
 from borb.pdf.canvas.event.begin_page_event import BeginPageEvent
 from borb.pdf.canvas.event.chunk_of_text_render_event import ChunkOfTextRenderEvent
 from borb.pdf.canvas.event.end_page_event import EndPageEvent
-from borb.pdf.canvas.event.event_listener import Event, EventListener
+from borb.pdf.canvas.event.event_listener import Event
+from borb.pdf.canvas.event.event_listener import EventListener
 from borb.pdf.canvas.event.line_render_event import LineRenderEvent
 from borb.pdf.canvas.geometry.line_segment import LineSegment
 from borb.pdf.canvas.geometry.rectangle import Rectangle
-from borb.pdf.canvas.layout.table.flexible_column_width_table import (
-    FlexibleColumnWidthTable,
-)
-from borb.pdf.canvas.layout.table.table import Table, TableCell
+from borb.pdf.canvas.layout.table.flexible_column_width_table import FlexibleColumnWidthTable
+from borb.pdf.canvas.layout.table.table import Table
+from borb.pdf.canvas.layout.table.table import TableCell
 from borb.pdf.canvas.layout.text.paragraph import Paragraph
+
+# fmt: on
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +57,6 @@ class TableDetectionByLines(EventListener):
     def _determine_number_of_rows_and_columns(
         self, lines_in_table: typing.List[LineSegment]
     ) -> typing.Tuple[int, int]:
-
         # keep track of unique xs / ys (to derive number of rows/cols)
         unique_xs: typing.Set[int] = set()
         unique_ys: typing.Set[int] = set()
@@ -75,7 +77,6 @@ class TableDetectionByLines(EventListener):
     def _determine_table_bounding_box(
         self, lines_in_table: typing.List[LineSegment]
     ) -> Rectangle:
-
         # determine bounding box
         min_x: Decimal = lines_in_table[0].x0
         max_x: Decimal = lines_in_table[0].x0
@@ -93,7 +94,6 @@ class TableDetectionByLines(EventListener):
     def _determine_table_cell_boundaries(
         self, lines_in_table: typing.List[LineSegment]
     ) -> Table:
-
         # keep track of unique xs / ys (to derive number of rows/cols)
         unique_xs: typing.Set[int] = set()
         unique_ys: typing.Set[int] = set()
@@ -120,7 +120,6 @@ class TableDetectionByLines(EventListener):
 
         for c in range(0, len(xs) - 1):
             for r in range(0, len(ys) - 1):
-
                 if c + 2 < len(xs):
                     logger.debug(
                         "attempting to merge [%d %d] with its right neighbour" % (r, c)
@@ -179,7 +178,7 @@ class TableDetectionByLines(EventListener):
             tc: TableCell = TableCell(
                 Paragraph(" "),
                 row_span=max_row - min_row + 1,
-                col_span=max_col - min_col + 1,
+                column_span=max_col - min_col + 1,
             )
 
             # set bounding_box
@@ -189,7 +188,7 @@ class TableDetectionByLines(EventListener):
                 xs[max_col + 1] - xs[min_col],
                 ys[max_row + 1] - ys[min_row],
             )
-            tc._previous_paint_box = tc._previous_layout_box
+            tc._previous_paint_box = tc.get_previous_layout_box()
 
             # add to Table
             table.add(tc)
@@ -202,7 +201,6 @@ class TableDetectionByLines(EventListener):
         return Decimal(math.sqrt((x0 - x1) ** 2 + (y0 - y1) ** 2))
 
     def _event_occurred(self, event: Event) -> None:
-
         # BeginPageEvent
         if isinstance(event, BeginPageEvent):
             self._current_page_number += 1
@@ -232,7 +230,6 @@ class TableDetectionByLines(EventListener):
                 ds.add(l)
             for l0 in self._lines_per_page[self._current_page_number]:
                 for l1 in self._lines_per_page[self._current_page_number]:
-
                     if l0 == l1:
                         continue
                     if ds.find(l0) == ds.find(l1):
@@ -282,11 +279,10 @@ class TableDetectionByLines(EventListener):
             for _, v in clusters_of_lines.items():
                 r, c = self._determine_number_of_rows_and_columns(v)
                 if r * c >= 2:
-
                     # determine table
                     table: Table = self._determine_table_cell_boundaries(v)
                     table._previous_layout_box = self._determine_table_bounding_box(v)
-                    table._previous_paint_box = table._previous_layout_box
+                    table._previous_paint_box = table.get_previous_layout_box()
 
                     # store
                     self._tables_per_page[self._current_page_number].append(table)

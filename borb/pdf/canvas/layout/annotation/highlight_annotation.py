@@ -7,8 +7,11 @@ underlines (PDF 1.4) in the text of a document. When opened, they shall display 
 the text of the associated note. Table 179 shows the annotation dictionary entries specific to these types of
 annotations.
 """
-from borb.io.read.types import Name, List, Decimal as bDecimal
-from borb.pdf.canvas.color.color import HexColor, Color
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
 
@@ -26,7 +29,6 @@ class HighlightAnnotation(Annotation):
     #
 
     def __init__(self, bounding_box: Rectangle, color: Color = HexColor("faed27")):
-
         # create generic annotation
         super(HighlightAnnotation, self).__init__(
             bounding_box=bounding_box, color=color
@@ -43,7 +45,7 @@ class HighlightAnnotation(Annotation):
         # underlying the annotation. The coordinates for each quadrilateral shall
         # be given in the order
         # x1 y1 x2 y2 x3 y3 x4 y4
-        self[Name("QuadPoints")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self[Name("QuadPoints")] = List().set_is_inline(True)
         # x1, y1
         self["QuadPoints"].append(bDecimal(bounding_box.get_x()))
         self["QuadPoints"].append(bDecimal(bounding_box.get_y()))
@@ -66,7 +68,7 @@ class HighlightAnnotation(Annotation):
         )
 
         # border
-        self[Name("Border")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self[Name("Border")] = List().set_is_inline(True)
         self["Border"].append(bDecimal(0))
         self["Border"].append(bDecimal(0))
         self["Border"].append(bDecimal(1))

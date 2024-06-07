@@ -11,7 +11,8 @@ explicitly by using Tf before any text is shown.
 
 import typing
 
-from borb.io.read.types import AnyPDFType, Decimal
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Decimal as bDecimal
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.operator.canvas_operator import CanvasOperator
 
@@ -25,8 +26,20 @@ class SetFontAndSize(CanvasOperator):
     explicitly by using Tf before any text is shown.
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("Tf", 2)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -36,6 +49,10 @@ class SetFontAndSize(CanvasOperator):
     ) -> None:
         """
         Invoke the Tf operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
 
         # lookup font dictionary
@@ -45,7 +62,7 @@ class SetFontAndSize(CanvasOperator):
 
         # font size
         font_size = operands[1]
-        assert isinstance(font_size, Decimal)
+        assert isinstance(font_size, bDecimal)
 
         # set state
         canvas = canvas_stream_processor.get_canvas()

@@ -24,8 +24,20 @@ class MoveTextPosition(CanvasOperator):
     Tm = Tlm = [[1,0,0], [0,1,0],[tx,ty,1]] * Tlm
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("Td", 2)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -35,6 +47,10 @@ class MoveTextPosition(CanvasOperator):
     ) -> None:
         """
         Invoke the Td operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         assert isinstance(operands[0], Decimal), "Operand 0 of Td must be a Decimal"
         assert isinstance(operands[1], Decimal), "Operand 1 of Td must be a Decimal"

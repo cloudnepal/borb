@@ -5,10 +5,11 @@
 This implementation of LayoutElement acts as a common base class to form fields.
 """
 import typing
-import zlib
 
 from borb.io.read.pdf_object import PDFObject
-from borb.io.read.types import Dictionary, List as bList, Name
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List as bList
+from borb.io.read.types import Name
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.layout.layout_element import LayoutElement
 from borb.pdf.page.page import Page
@@ -64,7 +65,7 @@ class FormField(LayoutElement):
     def _get_font_resource_name(self, font: Font, page: Page):
         # create resources if needed
         if "Resources" not in page:
-            page[Name("Resources")] = Dictionary().set_parent(page)  # type: ignore [attr-defined]
+            page[Name("Resources")] = Dictionary().set_parent(page)
         if "Font" not in page["Resources"]:
             page["Resources"][Name("Font")] = Dictionary()
 

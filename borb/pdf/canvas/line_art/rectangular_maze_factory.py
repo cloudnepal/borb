@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-A maze where every point is reachable and where there is only one single path
-from one point in the maze to any other point is called a perfect maze.
+A maze where every point is reachable and where there is only one single path from
+one point in the maze to any other point is called a perfect maze.
 """
 import random
 import typing
@@ -12,8 +12,8 @@ from decimal import Decimal
 
 class RectangularMazeFactory:
     """
-    A maze where every point is reachable and where there is only one single path
-    from one point in the maze to any other point is called a perfect maze.
+    A maze where every point is reachable and where there is only one single
+    path from one point in the maze to any other point is called a perfect maze.
     """
 
     #
@@ -29,18 +29,18 @@ class RectangularMazeFactory:
     #
 
     @staticmethod
-    def rectangular_maze(grid_width: int = 10, grid_height: int = 10):
+    def rectangular_maze(grid_height: int = 10, grid_width: int = 10):
         """
         This function generates a perfect rectangular maze.
-        :param grid_width:      the width of the grid (expressed in cells)
         :param grid_height:     the height of the grid (expressed in cells)
+        :param grid_width:      the width of the grid (expressed in cells)
         :return:                a perfect maze, represented as a typing.List[typing.Tuple[typing.Tuple[Decimal, Decimal], typing.Tuple[Decimal, Decimal]]]
         """
 
         # determine lines
         cells: typing.List[typing.List[typing.Tuple[bool, bool, bool, bool]]] = [
-            [(True, True, True, True) for _ in range(0, grid_width)]
-            for _ in range(0, grid_height)
+            [(True, True, True, True) for _ in range(0, grid_height)]
+            for _ in range(0, grid_width)
         ]
 
         cells_stk: typing.List[typing.Tuple[int, int]] = [

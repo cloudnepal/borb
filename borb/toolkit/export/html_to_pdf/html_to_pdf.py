@@ -6,35 +6,39 @@ This class converts HTML to PDF.
 """
 import logging
 import typing
-import xml.etree.ElementTree as ET
-from pathlib import Path
-
-from lxml.etree import HTMLParser, _Comment  # type: ignore [import]
+import xml.etree.ElementTree
 from decimal import Decimal
+import pathlib
 
-from borb.io.read.types import Decimal as bDecimal, Name, String, Dictionary
-from borb.pdf.canvas.layout.image.image import Image
-from borb.pdf.canvas.color.color import Color, HexColor
+# fmt: off
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Name
+from borb.io.read.types import String
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.font.simple_font.font_type_1 import StandardType1Font
-from borb.pdf.canvas.layout.emoji.emoji import Emoji, Emojis
-from borb.pdf.canvas.layout.page_layout.multi_column_layout import SingleColumnLayout
-from borb.pdf.canvas.layout.list.unordered_list import UnorderedList
-from borb.pdf.canvas.layout.list.ordered_list import OrderedList
-from borb.pdf.canvas.layout.table.flexible_column_width_table import (
-    FlexibleColumnWidthTable,
-)
-from borb.pdf.canvas.layout.table.table import Table
+from borb.pdf.canvas.layout.emoji.emoji import Emojis
 from borb.pdf.canvas.layout.horizontal_rule import HorizontalRule
+from borb.pdf.canvas.layout.image.image import Image
 from borb.pdf.canvas.layout.layout_element import LayoutElement
+from borb.pdf.canvas.layout.list.ordered_list import OrderedList
+from borb.pdf.canvas.layout.list.unordered_list import UnorderedList
+from borb.pdf.canvas.layout.page_layout.block_flow import BlockFlow
+from borb.pdf.canvas.layout.page_layout.inline_flow import InlineFlow
 from borb.pdf.canvas.layout.page_layout.page_layout import PageLayout
+from borb.pdf.canvas.layout.page_layout.single_column_layout_with_overflow import SingleColumnLayoutWithOverflow
+from borb.pdf.canvas.layout.table.flexible_column_width_table import FlexibleColumnWidthTable
+from borb.pdf.canvas.layout.table.table import Table
 from borb.pdf.canvas.layout.text.chunk_of_text import ChunkOfText
 from borb.pdf.canvas.layout.text.heterogeneous_paragraph import LineBreakChunk
 from borb.pdf.document.document import Document
 from borb.pdf.page.page import Page
 from borb.pdf.xref.plaintext_xref import PlainTextXREF
-from borb.pdf.canvas.layout.page_layout.block_flow import BlockFlow
-from borb.pdf.canvas.layout.page_layout.inline_flow import InlineFlow
+
+# noinspection PyProtectedMember
+
+# fmt: on
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +79,14 @@ class HTMLToPDF:
             # linking
             self.document: typing.Optional[Document] = None
 
+    #
+    # CONSTRUCTOR
+    #
+
+    #
+    # PRIVATE
+    #
+
     @staticmethod
     def _build_chunk_of_text(s: str, c: Context) -> LayoutElement:
         fonts_to_try: typing.List[Font] = []
@@ -114,7 +126,9 @@ class HTMLToPDF:
         )
 
     @staticmethod
-    def _process_a_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_a_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "a"
         e.tag = "span"
         prev_tail: typing.Optional[str] = e.tail
@@ -127,7 +141,7 @@ class HTMLToPDF:
         e.tag = "a"
 
         # fake span to hold tail
-        tmp: ET.Element = ET.Element("span")
+        tmp: xml.etree.ElementTree.Element = xml.etree.ElementTree.Element("span")
         tmp.text = prev_tail
         out_value_002: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
             tmp, c
@@ -139,7 +153,9 @@ class HTMLToPDF:
         return InlineFlow().extend([out_value_001, out_value_002])
 
     @staticmethod
-    def _process_abbr_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_abbr_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "abbr"
         e.tag = "span"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -148,7 +164,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_acronym_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_acronym_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "acronym"
         e.tag = "span"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -157,7 +175,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_address_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_address_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "address"
         e.tag = "p"
         prev_is_italic: bool = c.is_italic
@@ -169,7 +189,9 @@ class HTMLToPDF:
         return BlockFlow().extend([LineBreakChunk(), out_value, LineBreakChunk()])
 
     @staticmethod
-    def _process_article_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_article_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "article"
         e.tag = "div"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -178,7 +200,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_aside_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_aside_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "aside"
         e.tag = "div"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -187,7 +211,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_b_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_b_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "b"
         e.tag = "strong"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -196,7 +222,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_big_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_big_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "big"
         e.tag = "span"
         prev_font_size: Decimal = c.font_size
@@ -208,14 +236,18 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_block_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_block_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         block_layout_element: BlockFlow = BlockFlow()
 
         # add text
         # create artificial <span> element
         # then pass that element through HTMLToPDF._process_element
         if e.text is not None and len(e.text) > 0:
-            tmp_span: ET.Element = ET.Element("span")
+            tmp_span: xml.etree.ElementTree.Element = xml.etree.ElementTree.Element(
+                "span"
+            )
             tmp_span.text = e.text
             tmp_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
                 tmp_span, c
@@ -224,8 +256,10 @@ class HTMLToPDF:
             block_layout_element.add(tmp_value)
 
         # process children
+        import lxml.etree  # type: ignore[import]
+
         for child_element in e:
-            if isinstance(child_element, _Comment):
+            if isinstance(child_element, lxml.etree._Comment):
                 continue
             tmp_value = HTMLToPDF._process_element(child_element, c)
             assert tmp_value is not None
@@ -235,7 +269,7 @@ class HTMLToPDF:
         # create artificial <span> element
         # then pass that element through HTMLToPDF._process_element
         if e.tail is not None and len(e.tail) > 0:
-            tmp_span = ET.Element("span")
+            tmp_span = xml.etree.ElementTree.Element("span")
             tmp_span.text = e.tail
             tmp_value = HTMLToPDF._process_element(tmp_span, c)
             assert tmp_value is not None
@@ -245,7 +279,9 @@ class HTMLToPDF:
         return block_layout_element
 
     @staticmethod
-    def _process_blockquote_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_blockquote_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "blockquote"
         prev_background_color: typing.Optional[Color] = c.background_color
         c.background_color = HexColor("F5F5F5")
@@ -262,12 +298,16 @@ class HTMLToPDF:
         return blockquote_element
 
     @staticmethod
-    def _process_body_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_body_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "body"
         return HTMLToPDF._process_block_element(e, c)
 
     @staticmethod
-    def _process_br_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_br_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "br"
         e.tag = "span"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -276,7 +316,9 @@ class HTMLToPDF:
         return InlineFlow().extend([LineBreakChunk(), out_value])
 
     @staticmethod
-    def _process_cite_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_cite_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "cite"
         e.tag = "em"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -285,7 +327,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_code_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_code_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "code"
         e.tag = "span"
 
@@ -302,7 +346,7 @@ class HTMLToPDF:
         e.tag = "code"
 
         # fake span to hold tail
-        tmp: ET.Element = ET.Element("span")
+        tmp: xml.etree.ElementTree.Element = xml.etree.ElementTree.Element("span")
         tmp.text = prev_tail
         out_value_002: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
             tmp, c
@@ -314,7 +358,9 @@ class HTMLToPDF:
         return InlineFlow().extend([out_value_001, out_value_002])
 
     @staticmethod
-    def _process_dd_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_dd_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "dd"
         e.tag = "p"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -324,7 +370,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_div_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_div_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "div"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_block_element(
             e, c
@@ -333,7 +381,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_dl_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_dl_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "dl"
         e.tag = "div"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -342,7 +392,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_dt_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_dt_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "dt"
         e.tag = "p"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -351,11 +403,14 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_element(e: ET.Element, c: Context) -> typing.Optional[LayoutElement]:
+    def _process_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> typing.Optional[LayoutElement]:
         ELEMENT_CREATOR_METHODS: typing.Dict[
             str,
             typing.Callable[
-                [ET.Element, HTMLToPDF.Context], typing.Optional[LayoutElement]
+                [xml.etree.ElementTree.Element, HTMLToPDF.Context],
+                typing.Optional[LayoutElement],
             ],
         ] = {
             "a": HTMLToPDF._process_a_element,
@@ -426,7 +481,9 @@ class HTMLToPDF:
         return ELEMENT_CREATOR_METHODS[e.tag](e, c)
 
     @staticmethod
-    def _process_em_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_em_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "em"
         e.tag = "span"
 
@@ -440,7 +497,7 @@ class HTMLToPDF:
         e.tag = "em"
 
         # fake span to hold tail
-        tmp: ET.Element = ET.Element("span")
+        tmp: xml.etree.ElementTree.Element = xml.etree.ElementTree.Element("span")
         tmp.text = prev_tail
         out_value_002: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
             tmp, c
@@ -452,13 +509,15 @@ class HTMLToPDF:
         return InlineFlow().extend([out_value_001, out_value_002])
 
     @staticmethod
-    def _process_figure_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_figure_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         # TODO: actually delegate this to its children
         assert e.tag == "figure"
-        figcaption: typing.Optional[ET.Element] = next(
+        figcaption: typing.Optional[xml.etree.ElementTree.Element] = next(
             iter([x for x in e if x.tag == "figcaption"]), None
         )
-        img: typing.Optional[ET.Element] = next(
+        img: typing.Optional[xml.etree.ElementTree.Element] = next(
             iter([x for x in e if x.tag == "img"]), None
         )
         number_of_rows: int = 0
@@ -484,7 +543,9 @@ class HTMLToPDF:
         return table
 
     @staticmethod
-    def _process_footer_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_footer_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "footer"
         e.tag = "div"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -493,7 +554,7 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_head_element(e: ET.Element, c: Context) -> None:
+    def _process_head_element(e: xml.etree.ElementTree.Element, c: Context) -> None:
         assert e.tag == "head"
         # title
         if "title" in [x.tag for x in e]:
@@ -503,7 +564,9 @@ class HTMLToPDF:
             HTMLToPDF._process_element(meta_element, c)
 
     @staticmethod
-    def _process_header_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_header_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "header"
         e.tag = "div"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -512,11 +575,13 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_hr_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_hr_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "hr"
 
         # process tail
-        tmp: ET.Element = ET.Element("span")
+        tmp: xml.etree.ElementTree.Element = xml.etree.ElementTree.Element("span")
         tmp.text = e.tail
         out_value_002: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
             tmp, c
@@ -527,7 +592,9 @@ class HTMLToPDF:
         return BlockFlow().extend([HorizontalRule(), out_value_002])
 
     @staticmethod
-    def _process_html_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_html_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         # head
         if "head" in [x.tag for x in e]:
             HTMLToPDF._process_element([x for x in e if x.tag == "head"][0], c)
@@ -542,7 +609,9 @@ class HTMLToPDF:
         return BlockFlow()
 
     @staticmethod
-    def _process_hx_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_hx_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag in ["h1", "h2", "h3", "h4", "h5", "h6"]
         FONT_SIZE_MODIFIER: typing.Dict[str, Decimal] = {
             "h1": Decimal(2),
@@ -573,7 +642,9 @@ class HTMLToPDF:
         return header_layout_element
 
     @staticmethod
-    def _process_i_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_i_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "i"
         e.tag = "em"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -582,7 +653,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_img_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_img_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "img"
         src: str = e.attrib["src"]
         # fmt: off
@@ -592,7 +665,7 @@ class HTMLToPDF:
         out_value_001: LayoutElement = Image(src, width=w, height=h)
 
         # process tail
-        tmp: ET.Element = ET.Element("span")
+        tmp: xml.etree.ElementTree.Element = xml.etree.ElementTree.Element("span")
         tmp.text = e.tail
         out_value_002: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
             tmp, c
@@ -603,8 +676,9 @@ class HTMLToPDF:
         return InlineFlow().extend([out_value_001, out_value_002])
 
     @staticmethod
-    def _process_inline_element(e: ET.Element, c: Context) -> LayoutElement:
-
+    def _process_inline_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         # <span class="emoji"></span>
         chunks: typing.List[LayoutElement] = []
         if e.tag == "span" and (
@@ -631,8 +705,10 @@ class HTMLToPDF:
                 chunks.extend([HTMLToPDF._build_chunk_of_text(w, c) for w in ws])
 
         # children
+        import lxml.etree  # type: ignore[import]
+
         for child_element in e:
-            if isinstance(child_element, _Comment):
+            if isinstance(child_element, lxml.etree._Comment):
                 continue
             tmp_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
                 child_element, c
@@ -654,17 +730,23 @@ class HTMLToPDF:
         return InlineFlow().extend(chunks)
 
     @staticmethod
-    def _process_li_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_li_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "li"
         return HTMLToPDF._process_block_element(e, c)
 
     @staticmethod
-    def _process_main_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_main_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "main"
         return HTMLToPDF._process_block_element(e, c)
 
     @staticmethod
-    def _process_mark_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_mark_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "mark"
         e.tag = "span"
 
@@ -678,7 +760,7 @@ class HTMLToPDF:
         e.tag = "mark"
 
         # fake span to hold tail
-        tmp: ET.Element = ET.Element("span")
+        tmp: xml.etree.ElementTree.Element = xml.etree.ElementTree.Element("span")
         tmp.text = prev_tail
         out_value_002: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
             tmp, c
@@ -690,7 +772,7 @@ class HTMLToPDF:
         return InlineFlow().extend([out_value_001, out_value_002])
 
     @staticmethod
-    def _process_meta_element(e: ET.Element, c: Context) -> None:
+    def _process_meta_element(e: xml.etree.ElementTree.Element, c: Context) -> None:
         assert e.tag == "meta"
         document: typing.Optional[Document] = c.document
         if document is None:
@@ -711,7 +793,9 @@ class HTMLToPDF:
             document["XRef"]["Trailer"]["Info"][Name("Author")] = String(content)
 
     @staticmethod
-    def _process_noscript_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_noscript_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "noscript"
         e.tag = "p"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -720,11 +804,13 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_ol_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_ol_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "ol"
         ol_layout_element: OrderedList = OrderedList()
         for child_element in e:
-            if child_element.tag == ET.Comment:
+            if child_element.tag == xml.etree.ElementTree.Comment:
                 continue
             tmp_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
                 child_element, c
@@ -734,12 +820,16 @@ class HTMLToPDF:
         return BlockFlow().add(ol_layout_element)
 
     @staticmethod
-    def _process_p_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_p_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "p"
         return BlockFlow().add(HTMLToPDF._process_inline_element(e, c))
 
     @staticmethod
-    def _process_pre_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_pre_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "pre"
         e.tag = "div"
         prev_is_preformatted: bool = c.is_preformatted
@@ -751,7 +841,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_q_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_q_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "q"
         e.tag = "span"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -766,7 +858,9 @@ class HTMLToPDF:
         )
 
     @staticmethod
-    def _process_samp_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_samp_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "samp"
         e.tag = "span"
         prev_is_monospaced: bool = c.is_monospaced
@@ -778,7 +872,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_section_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_section_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "section"
         e.tag = "div"
         out_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(e, c)
@@ -787,7 +883,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_small_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_small_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "small"
         e.tag = "span"
         prev_font_size: Decimal = c.font_size
@@ -799,7 +897,9 @@ class HTMLToPDF:
         return out_value
 
     @staticmethod
-    def _process_strong_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_strong_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "strong"
         e.tag = "span"
 
@@ -813,7 +913,7 @@ class HTMLToPDF:
         e.tag = "strong"
 
         # fake span to hold tail
-        tmp: ET.Element = ET.Element("span")
+        tmp: xml.etree.ElementTree.Element = xml.etree.ElementTree.Element("span")
         tmp.text = prev_tail
         out_value_002: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
             tmp, c
@@ -825,7 +925,9 @@ class HTMLToPDF:
         return InlineFlow().extend([out_value_001, out_value_002])
 
     @staticmethod
-    def _process_table_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_table_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "table"
         if "tbody" in [x.tag for x in e]:
             return HTMLToPDF._process_table_element_001(e, c)
@@ -833,11 +935,13 @@ class HTMLToPDF:
             return HTMLToPDF._process_table_element_002(e, c)
 
     @staticmethod
-    def _process_table_element_001(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_table_element_001(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         # separate thead / tbody
         # fmt: off
-        thead: typing.Optional[ET.Element] = next(iter([x for x in e if x.tag == "thead"]), None)
-        tbody: ET.Element = next(iter([x for x in e if x.tag == "tbody"]))
+        thead: typing.Optional[xml.etree.ElementTree.Element] = next(iter([x for x in e if x.tag == "thead"]), None)
+        tbody: xml.etree.ElementTree.Element = next(iter([x for x in e if x.tag == "tbody"]))
         # fmt: on
 
         # count rows / cols
@@ -865,8 +969,9 @@ class HTMLToPDF:
         return table
 
     @staticmethod
-    def _process_table_element_002(e: ET.Element, c: Context) -> LayoutElement:
-
+    def _process_table_element_002(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         # count rows / cols
         nrows_001: int = len([x for x in e if x.tag == "tr"])
         ncols_001: int = len(
@@ -892,7 +997,7 @@ class HTMLToPDF:
         return table
 
     @staticmethod
-    def _process_title_element(e: ET.Element, c: Context) -> None:
+    def _process_title_element(e: xml.etree.ElementTree.Element, c: Context) -> None:
         assert e.tag == "title"
         document: typing.Optional[Document] = c.document
         if document is None:
@@ -906,11 +1011,13 @@ class HTMLToPDF:
         document["XRef"]["Trailer"]["Info"][Name("Title")] = String(e.text or "")
 
     @staticmethod
-    def _process_ul_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_ul_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "ul"
         ul_layout_element: UnorderedList = UnorderedList()
         for child_element in e:
-            if child_element.tag == ET.Comment:
+            if child_element.tag == xml.etree.ElementTree.Comment:
                 continue
             tmp_value: typing.Optional[LayoutElement] = HTMLToPDF._process_element(
                 child_element, c
@@ -921,45 +1028,54 @@ class HTMLToPDF:
 
     @staticmethod
     def _process_unsupported_element(
-        e: ET.Element, c: Context
+        e: xml.etree.ElementTree.Element, c: Context
     ) -> typing.Optional[LayoutElement]:
         logger.warning("<%s> unsupported" % e.tag)
         return None
 
     @staticmethod
-    def _process_video_element(e: ET.Element, c: Context) -> LayoutElement:
+    def _process_video_element(
+        e: xml.etree.ElementTree.Element, c: Context
+    ) -> LayoutElement:
         assert e.tag == "video"
-        w: typing.Optional[Decimal] = (
-            Decimal(e.attrib["width"]) if "width" in e.attrib else None
-        )
-        h: typing.Optional[Decimal] = (
-            Decimal(e.attrib["height"]) if "height" in e.attrib else None
-        )
+        w: Decimal = Decimal(e.attrib["width"]) if "width" in e.attrib else Decimal(1)
+        h: Decimal = Decimal(e.attrib["height"]) if "height" in e.attrib else Decimal(1)
         src: str = e.attrib["src"]
 
         # attempt to get a frame
-        import cv2  # type: ignore [import]
+        try:
+            import cv2  # type: ignore[import]
+            import tempfile
 
-        video_capture = cv2.VideoCapture(src)
-        success, nd_array_image = video_capture.read()
+            video_capture = cv2.VideoCapture(src)
+            success, nd_array_image = video_capture.read()
+            tmp_file: pathlib.Path = pathlib.Path(
+                tempfile.NamedTemporaryFile(suffix=".jpg").name
+            )
+            cv2.imwrite(str(tmp_file), nd_array_image)
+            return Image(tmp_file, width=w, height=h)
+        except:
+            logger.warning(
+                "Unable to retrieve frame for <video> element, defaulting to empty Image."
+            )
+            from PIL import Image as PILImageModule
 
-        # write to temporary file
-        import tempfile
-
-        tmp_file: Path = Path(tempfile.NamedTemporaryFile(suffix=".jpg").name)
-        cv2.imwrite(str(tmp_file), nd_array_image)
-
-        # build an Image
-        return Image(tmp_file, width=w, height=h)
+            return Image(
+                PILImageModule.new(
+                    mode="RGB", size=(int(w), int(h)), color=(113, 121, 126)
+                ),
+                width=w,
+                height=h,
+            )
 
     #
-    # public methods
+    # PUBLIC
     #
 
     @staticmethod
     def convert_html_to_layout_element(
         # fmt: off
-        html: typing.Union[str, ET.Element],
+        html: typing.Union[str, xml.etree.ElementTree.Element],
         fallback_fonts_regular: typing.List[Font] = [StandardType1Font("Helvetica")],
         fallback_fonts_bold: typing.List[Font] = [StandardType1Font("Helvetica-Bold")],
         fallback_fonts_italic: typing.List[Font] = [StandardType1Font("Helvetica-Oblique")],
@@ -969,7 +1085,7 @@ class HTMLToPDF:
     ) -> LayoutElement:
         """
         This function converts a html str to a LayoutElement
-        :param html:                        the html str (or ET.Element) to be converted
+        :param html:                        the html str (or xml.etree.ElementTree.Element) to be converted
         :param fallback_fonts_regular:      fallback (regular) fonts to try when the default font is unable to render a character
         :param fallback_fonts_bold:         fallback (bold) fonts to try when the default font is unable to render a character
         :param fallback_fonts_italic:       fallback (italic) fonts to try when the default font is unable to render a character
@@ -977,10 +1093,14 @@ class HTMLToPDF:
         :return:
         """
 
-        # convert str to ET.Element
-        root_element: typing.Optional[ET.Element] = None
+        # convert str to xml.etree.ElementTree.Element
+        import lxml.etree  # type: ignore[import]
+
+        root_element: typing.Optional[xml.etree.ElementTree.Element] = None
         if isinstance(html, str):
-            root_element = ET.fromstring(html, HTMLParser())
+            root_element = xml.etree.ElementTree.fromstring(
+                html, lxml.etree.HTMLParser()
+            )
         else:
             root_element = html
         assert root_element is not None
@@ -999,7 +1119,7 @@ class HTMLToPDF:
     @staticmethod
     def convert_html_to_pdf(
         # fmt: off
-        html: typing.Union[str, ET.Element],
+        html: typing.Union[str, xml.etree.ElementTree.Element],
         fallback_fonts_regular: typing.List[Font] = [StandardType1Font("Helvetica")],
         fallback_fonts_bold: typing.List[Font] = [StandardType1Font("Helvetica-Bold")],
         fallback_fonts_italic: typing.List[Font] = [StandardType1Font("Helvetica-Oblique")],
@@ -1019,12 +1139,16 @@ class HTMLToPDF:
         doc.add_page(page)
 
         # PageLayout
-        layout: PageLayout = SingleColumnLayout(page)
+        layout: PageLayout = SingleColumnLayoutWithOverflow(page)
 
         # parse HTML
-        root_element: typing.Optional[ET.Element] = None
+        import lxml.etree
+
+        root_element: typing.Optional[xml.etree.ElementTree.Element] = None
         if isinstance(html, str):
-            root_element = ET.fromstring(html, HTMLParser())
+            root_element = xml.etree.ElementTree.fromstring(
+                html, lxml.etree.HTMLParser()
+            )
         else:
             root_element = html
         assert root_element is not None

@@ -9,9 +9,11 @@ import math
 import typing
 from decimal import Decimal
 
-from borb.pdf.canvas.color.color import HexColor, Color, X11Color
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
-from borb.pdf.canvas.layout.layout_element import Alignment, LayoutElement
+from borb.pdf.canvas.layout.layout_element import Alignment
+from borb.pdf.canvas.layout.layout_element import LayoutElement
 from borb.pdf.page.page import Page
 
 
@@ -30,7 +32,6 @@ class DisconnectedShape(LayoutElement):
         lines: typing.List[
             typing.Tuple[typing.Tuple[Decimal, Decimal], typing.Tuple[Decimal, Decimal]]
         ],
-        stroke_color: Color = HexColor("000000"),
         background_color: typing.Optional[Color] = None,
         border_bottom: bool = False,
         border_color: Color = HexColor("000000"),
@@ -52,6 +53,7 @@ class DisconnectedShape(LayoutElement):
         padding_left: Decimal = Decimal(0),
         padding_right: Decimal = Decimal(0),
         padding_top: Decimal = Decimal(0),
+        stroke_color: Color = HexColor("000000"),
         vertical_alignment: Alignment = Alignment.TOP,
     ):
         super(DisconnectedShape, self).__init__(
@@ -66,6 +68,8 @@ class DisconnectedShape(LayoutElement):
             border_right=border_right,
             border_top=border_top,
             border_width=border_width,
+            font="Helvetica",
+            font_color=HexColor("#000000"),
             font_size=Decimal(12),
             horizontal_alignment=horizontal_alignment,
             margin_bottom=margin_bottom,
@@ -96,7 +100,6 @@ class DisconnectedShape(LayoutElement):
         )
 
     def _paint_content_box(self, page: Page, available_space: Rectangle) -> None:
-
         # translate points to fit in box
         self.move_to(
             available_space.get_x(),
@@ -104,7 +107,7 @@ class DisconnectedShape(LayoutElement):
         )
 
         # write content
-        stroke_rgb = (self._stroke_color or X11Color("Black")).to_rgb()
+        stroke_rgb = (self._stroke_color or HexColor("000000")).to_rgb()
         content = "q %f %f %f RG %d w " % (
             float(stroke_rgb.red),
             float(stroke_rgb.green),
@@ -132,6 +135,7 @@ class DisconnectedShape(LayoutElement):
     def get_height(self) -> Decimal:
         """
         This function returns the height of this DisjointShape
+        :return:    the height
         """
         min_y = min([min(x[0][1], x[1][1]) for x in self._lines])
         max_y = max([max(x[0][1], x[1][1]) for x in self._lines])
@@ -140,6 +144,7 @@ class DisconnectedShape(LayoutElement):
     def get_width(self) -> Decimal:
         """
         This function returns the width of this DisjointShape
+        :return:    the width
         """
         min_x = min([min(x[0][0], x[1][0]) for x in self._lines])
         max_x = max([max(x[0][0], x[1][0]) for x in self._lines])
@@ -149,7 +154,10 @@ class DisconnectedShape(LayoutElement):
         self, lower_left_x: Decimal, lower_left_y: Decimal
     ) -> "DisconnectedShape":
         """
-        This method translates this DisjointShape so its lower left corner aligns with the given coordinates
+        This method translates this Shape so its lower left corner aligns with the given coordinates
+        :param lower_left_x:    the desired lower left x-coordinate
+        :param lower_left_y:    the desired lower left y-coordinate
+        :return:    self
         """
         min_x = min([min(x[0][0], x[1][0]) for x in self._lines])
         min_y = min([min(x[0][1], x[1][1]) for x in self._lines])
@@ -168,7 +176,7 @@ class DisconnectedShape(LayoutElement):
         """
         This function rotates the DisjointShape for a given angle
         :param angle_in_radians:    the angle
-        :return:                    this DisjointShape
+        :return:                    self
         """
         a: Decimal = Decimal(math.cos(angle_in_radians))
         b: Decimal = Decimal(-math.sin(angle_in_radians))
@@ -191,6 +199,10 @@ class DisconnectedShape(LayoutElement):
     ) -> "DisconnectedShape":
         """
         This method scales this Shape down to fit a given max. width / height
+        :param max_width:               the maximum width
+        :param max_height:              the maximum height
+        :param preserve_aspect_ratio:   True if the aspect ratio should be preserved, False otherwise
+        :return:                        self
         """
         w_scale = max_width / self.get_width()
         h_scale = max_height / self.get_height()
@@ -216,7 +228,11 @@ class DisconnectedShape(LayoutElement):
         preserve_aspect_ratio: bool = True,
     ) -> "DisconnectedShape":
         """
-        This method scales this Shape down to fit a given max. width / height
+        This method scales this Shape up to fit a given max. width / height
+        :param max_width:               the maximum width
+        :param max_height:              the maximum height
+        :param preserve_aspect_ratio:   True if the aspect ratio should be preserved, False otherwise
+        :return:                        self
         """
         w_scale = max_width / self.get_width()
         h_scale = max_height / self.get_height()

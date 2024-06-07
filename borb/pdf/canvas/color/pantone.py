@@ -11,7 +11,9 @@
 import typing
 from decimal import Decimal
 
-from borb.pdf.canvas.color.color import Color, HexColor, RGBColor
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
+from borb.pdf.canvas.color.color import RGBColor
 
 
 class Pantone(HexColor):
@@ -2360,6 +2362,8 @@ class Pantone(HexColor):
     def find_nearest_pantone_color(color: Color) -> "Pantone":
         """
         This function find the nearest Pantone equivalent for a given Color
+        :param color:   the input Color
+        :return:        the (nearest) Pantone Color
         """
         rgb_color_001: RGBColor = color.to_rgb()
         min_dist: typing.Optional[Decimal] = None
@@ -2380,6 +2384,7 @@ class Pantone(HexColor):
 
     def get_name(self) -> str:
         """
-        This function returns the name of this pantone color
+        This function returns the name of this Pantone color
+        :return:    the name of this Pantone Color
         """
         return self.color_name

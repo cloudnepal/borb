@@ -33,7 +33,6 @@ class InlineFlow(LayoutElement):
     #
 
     def _get_content_box(self, available_space: Rectangle) -> Rectangle:
-
         # all lines
         layout_lines: typing.List[typing.List[LayoutElement]] = [[]]
         layout_lines_height: typing.List[Decimal] = [Decimal(0)]
@@ -88,13 +87,9 @@ class InlineFlow(LayoutElement):
 
     @staticmethod
     def _get_min_content_box(e: LayoutElement) -> Rectangle:
-        from borb.pdf.canvas.layout.table.table import TableCell
-
-        c: TableCell = TableCell(e)
-        c._calculate_min_and_max_layout_box()
-        assert c._min_width is not None
-        assert c._max_height is not None
-        return Rectangle(Decimal(0), Decimal(0), c._min_width, c._max_height)
+        r0: typing.Optional[Rectangle] = e.get_smallest_landscape_box()
+        assert r0 is not None
+        return r0
 
     def _paint_content_box(self, page: "Page", content_box: Rectangle) -> None:  # type: ignore [name-defined]
         for e in self._content:
@@ -112,6 +107,14 @@ class InlineFlow(LayoutElement):
         :param e:   the LayoutElement to be added
         :return:    self
         """
+
+        # keep track of font size
+        if len(self._content) == 0:
+            try:
+                self._font_size = e.get_font_size()
+            except:
+                pass
+
         if isinstance(e, InlineFlow):
             for child_e in e._content:
                 self.add(child_e)
@@ -122,7 +125,7 @@ class InlineFlow(LayoutElement):
     def extend(self, es: typing.List[LayoutElement]) -> "InlineFlow":
         """
         This function adds a typing.List of LayoutElement(s) to this InlineFlow
-        :param es:   the LayoutElements to be added
+        :param es:  the LayoutElements to be added
         :return:    self
         """
         for e in es:

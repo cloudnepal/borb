@@ -6,23 +6,33 @@ This function decodes a Stream, applying the filters specified in the Filter ent
 of its stream dictionary
 """
 import typing
+from decimal import Decimal
 
 from borb.io.filter.ascii85_decode import ASCII85Decode
 from borb.io.filter.flate_decode import FlateDecode
 from borb.io.filter.lzw_decode import LZWDecode
 from borb.io.filter.run_length_decode import RunLengthDecode
-from borb.io.read.types import Decimal, Dictionary, List, Name, Stream
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
 
 
 def decode_stream(s: Stream) -> Stream:
     """
-    This function decodes a Stream, applying the filters specified in the Filter entry
-    of its stream dictionary
+    This function decodes a Stream, applying the filters specified in the Filter entry of its stream dictionary
+    :param s:   the input Stream object
+    :return:    the input Stream, modified to contain the decoded bytes
     """
     # fmt: off
     assert isinstance(s, Stream), "decode_stream only works on Stream objects"
     assert ("Bytes" in s), "decode_stream only works on Stream objects with a `Bytes` key."
     # fmt: on
+
+    # IF stream already has /DecodedBytes
+    # THEN return stream
+    if "DecodedBytes" in s:
+        return s
 
     # determine filter(s) to apply
     filters: typing.List[str] = []

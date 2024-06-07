@@ -9,14 +9,20 @@ import zlib
 from decimal import Decimal
 
 from borb.io.read.pdf_object import PDFObject
-from borb.io.read.types import Boolean, AnyPDFType
+from borb.io.read.types import Boolean
 from borb.io.read.types import Decimal as bDecimal
-from borb.io.read.types import Dictionary, List, Name, Stream, String
-from borb.pdf import Alignment
-from borb.pdf.canvas.color.color import Color, HexColor, RGBColor
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
+from borb.io.read.types import String
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
+from borb.pdf.canvas.color.color import RGBColor
 from borb.pdf.canvas.font.simple_font.font_type_1 import StandardType1Font
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.forms.form_field import FormField
+from borb.pdf.canvas.layout.layout_element import Alignment
 from borb.pdf.page.page import Page
 
 
@@ -70,6 +76,8 @@ class TextField(FormField):
             border_right=border_right,
             border_top=border_top,
             border_width=border_width,
+            font="Helvetica",
+            font_color=font_color,
             font_size=font_size,
             horizontal_alignment=horizontal_alignment,
             margin_bottom=margin_bottom,
@@ -82,7 +90,6 @@ class TextField(FormField):
             padding_top=padding_top,
             vertical_alignment=vertical_alignment,
         )
-        self._font_color = font_color
         self._value: str = value
         self._default_value: str = default_value
         self._field_name: typing.Optional[str] = field_name
@@ -104,7 +111,6 @@ class TextField(FormField):
         )
 
     def _init_widget_dictionary(self, page: Page, layout_box: Rectangle) -> None:
-
         if self._widget_dictionary is not None:
             return
 
@@ -132,7 +138,7 @@ class TextField(FormField):
         widget_normal_appearance[Name("Type")] = Name("XObject")
         widget_normal_appearance[Name("Subtype")] = Name("Form")
         widget_normal_appearance[Name("BBox")] = List()
-        widget_normal_appearance[Name("BBox")].set_is_inline(True)  # type: ignore [attr-defined]
+        widget_normal_appearance[Name("BBox")].set_is_inline(True)
         widget_normal_appearance["BBox"].append(bDecimal(0))
         widget_normal_appearance["BBox"].append(bDecimal(0))
         widget_normal_appearance["BBox"].append(bDecimal(layout_box.width))
@@ -152,7 +158,7 @@ class TextField(FormField):
         # fmt: on
 
         # get Catalog
-        catalog: Dictionary = root["XRef"]["Trailer"]["Root"]  # type: ignore [attr-defined]
+        catalog: Dictionary = root["XRef"]["Trailer"]["Root"]  # type: ignore[attr-defined]
 
         # widget dictionary
         # fmt: off
@@ -161,7 +167,7 @@ class TextField(FormField):
         self._widget_dictionary[Name("Type")] = Name("Annot")
         self._widget_dictionary[Name("Subtype")] = Name("Widget")
         self._widget_dictionary[Name("F")] = bDecimal(4)
-        self._widget_dictionary[Name("Rect")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self._widget_dictionary[Name("Rect")] = List().set_is_inline(True)
         self._widget_dictionary["Rect"].append(bDecimal(layout_box.x))
         self._widget_dictionary["Rect"].append(bDecimal(layout_box.y + layout_box.height - self._font_size))
         self._widget_dictionary["Rect"].append(bDecimal(layout_box.x + layout_box.width))
@@ -202,7 +208,6 @@ class TextField(FormField):
         catalog["AcroForm"]["Fields"].append(self._widget_dictionary)
 
     def _paint_content_box(self, page: "Page", available_space: Rectangle) -> None:
-
         # determine layout rectangle
         cbox: Rectangle = self._get_content_box(available_space)
 

@@ -27,14 +27,14 @@ def _bezier(p0, p1, p2, p3) -> typing.List[LineSegment]:
         x = (
             (ONE - t) ** 3 * p0[0]
             + 3 * t * (ONE - t) ** 2 * p1[0]
-            + 3 * t**2 * (ONE - t) * p2[0]
-            + t**3 * p3[0]
+            + 3 * t ** 2 * (ONE - t) * p2[0]
+            + t ** 3 * p3[0]
         )
         y = (
             (ONE - t) ** 3 * p0[1]
             + 3 * t * (ONE - t) ** 2 * p1[1]
-            + 3 * t**2 * (ONE - t) * p2[1]
-            + t**3 * p3[1]
+            + 3 * t ** 2 * (ONE - t) * p2[1]
+            + t ** 3 * p3[1]
         )
         pts.append((x, y))
 
@@ -56,8 +56,20 @@ class AppendCubicBezierCurve1(CanvasOperator):
     (x3 , y3 ).
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("c", 6)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -67,6 +79,10 @@ class AppendCubicBezierCurve1(CanvasOperator):
     ) -> None:
         """
         Invokes the c operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         assert isinstance(
             operands[0], Decimal
@@ -125,6 +141,10 @@ class AppendCubicBezierCurve2(CanvasOperator):
     ) -> None:
         """
         Invokes the v operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         assert isinstance(
             operands[0], Decimal
@@ -176,6 +196,10 @@ class AppendCubicBezierCurve3(CanvasOperator):
     ) -> None:
         """
         Invokes the y operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         assert isinstance(
             operands[0], Decimal

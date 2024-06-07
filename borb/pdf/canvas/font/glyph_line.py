@@ -41,18 +41,21 @@ class Glyph:
     def get_character_code(self) -> int:
         """
         This function returns the character code of this Glyph object
+        :return:    the character code
         """
         return self._character_code
 
     def get_unicode_str(self) -> str:
         """
         This function returns the unicode str that this Glyph represents
+        :return:    the unicode str
         """
         return self._unicode_str
 
     def get_width(self) -> Decimal:
         """
         This function returns the width (in text space) of this Glyph
+        :return:    the witdh (in text space)
         """
         return self._width
 
@@ -76,13 +79,14 @@ class GlyphLine:
         word_spacing: Decimal = Decimal(0),
         horizontal_scaling: Decimal = Decimal(100),
     ):
+        # TODO: sort args
         assert isinstance(font, Font)
-        self._glyphs: typing.List[Glyph] = glyphs
+        self._character_spacing = character_spacing
         self._font = font
         self._font_size = font_size
-        self._character_spacing = character_spacing
-        self._word_spacing = word_spacing
+        self._glyphs: typing.List[Glyph] = glyphs
         self._horizontal_scaling = horizontal_scaling
+        self._word_spacing = word_spacing
 
     #
     # PRIVATE
@@ -106,6 +110,8 @@ class GlyphLine:
         """
         This function appends a Glyph (or all Glyph objects in a GlyphLine) to this GlyphLine.
         This function returns self.
+        :param glyph_or_glyphline:  the glyph or glyphline to be added
+        :return:                    self
         """
         if isinstance(glyph_or_glyphline, Glyph):
             self._glyphs.append(glyph_or_glyphline)
@@ -133,6 +139,7 @@ class GlyphLine:
         :param horizontal_scaling:  the horizontal scaling factor (100 represents no zoom)
         :return:                    a GlyphLine
         """
+        # TODO: sort args
         glyphs: typing.List[Glyph] = []
         i: int = 0
         while i < len(text):
@@ -193,6 +200,7 @@ class GlyphLine:
         :param horizontal_scaling:  the horizontal scaling factor (100 represents no zoom)
         :return:                    a GlyphLine
         """
+        # TODO: sort args
         character_ids: typing.List[int] = [
             font.unicode_to_character_identifier(c) or 0 for c in text
         ]
@@ -211,12 +219,14 @@ class GlyphLine:
     def get_text(self) -> str:
         """
         This function returns the unicode str represented by the Glyph objects in this GlyphLine
+        :return:    the text
         """
         return "".join([x.get_unicode_str() for x in self._glyphs])
 
     def get_width_in_text_space(self) -> Decimal:
         """
         This function calculates the width (in text space) of this GlyphLine
+        :return:    the width (in text space)
         """
         w: Decimal = Decimal(0)
         for g in self._glyphs:
@@ -247,12 +257,13 @@ class GlyphLine:
         """
         This function splits the GlyphLine into several GlyphLine objects,
         one per Glyph in the (original, this) GlyphLine.
+        :return:    the resulting GlyphLine objects (as typing.List[GlyphLine])
         """
         out: typing.List["GlyphLine"] = []
         for g in self._glyphs:
             out.append(
                 GlyphLine(
-                    b"",
+                    [g],
                     self._font,
                     self._font_size,
                     self._character_spacing,
@@ -260,11 +271,11 @@ class GlyphLine:
                     self._horizontal_scaling,
                 )
             )
-            out[-1]._glyphs = [g]
         return out
 
     def uses_descent(self) -> bool:
         """
         This function returns True if any of the Glyph objects in the GlyphLine has a non-zero descent, False otherwise
+        :return:    True if this GlyphLine has characters with non-zero descent, False otherwise
         """
         return any([(x in ["y", "p", "q", "f", "g", "j"]) for x in self.get_text()])

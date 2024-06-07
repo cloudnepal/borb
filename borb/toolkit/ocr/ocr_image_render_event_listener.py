@@ -7,26 +7,23 @@
 import logging
 import typing
 from decimal import Decimal
-from pathlib import Path
+import pathlib
 
-from PIL import Image as PILImage  # type: ignore [import]
+from PIL import Image as PILImageModule
 from PIL import ImageDraw
 
-from borb.pdf.canvas.color.color import Color, HexColor, RGBColor
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
+from borb.pdf.canvas.color.color import RGBColor
 from borb.pdf.canvas.event.begin_page_event import BeginPageEvent
 from borb.pdf.canvas.event.end_page_event import EndPageEvent
-from borb.pdf.canvas.event.event_listener import Event, EventListener
+from borb.pdf.canvas.event.event_listener import Event
+from borb.pdf.canvas.event.event_listener import EventListener
 from borb.pdf.canvas.event.image_render_event import ImageRenderEvent
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.font.simple_font.font_type_1 import StandardType1Font
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.page.page import Page
-
-try:
-    import pytesseract  # type: ignore [import]
-    from pytesseract import Output  # type: ignore [import]
-except ImportError:
-    assert False, "Unable to import pytesseract"
 
 logger = logging.getLogger(__name__)
 
@@ -122,14 +119,16 @@ class OCRImageRenderEventListener(EventListener):
     #
 
     def __init__(
-        self, tesseract_data_dir: Path, minimal_confidence: Decimal = Decimal(0.75)
+        self,
+        tesseract_data_dir: pathlib.Path,
+        minimal_confidence: Decimal = Decimal(0.75),
     ):
         # fmt: off
         assert tesseract_data_dir.exists(), "OCRImageRenderEventListener requires the tesseract data directory."
         assert tesseract_data_dir.is_dir(), "OCRImageRenderEventListener requires the tesseract data directory."
         # fmt: on
 
-        self._tesseract_data_dir: Path = tesseract_data_dir
+        self._tesseract_data_dir: pathlib.Path = tesseract_data_dir
         self._minimum_confidence: Decimal = minimal_confidence
         self._helvetica: Font = StandardType1Font("Helvetica")
         self._page: typing.Optional[Page] = None
@@ -148,26 +147,26 @@ class OCRImageRenderEventListener(EventListener):
             return
 
         if isinstance(event, ImageRenderEvent):
+            import pytesseract  # type: ignore[import]
 
             data = pytesseract.image_to_data(
                 event.get_image(),
                 lang="eng",
                 config='--tessdata-dir "%s"' % str(self._tesseract_data_dir.absolute()),
-                output_type=Output.DICT,
+                output_type=pytesseract.Output.DICT,
             )
 
-            width_ratio: Decimal = event.get_width() / event.get_image().width  # type: ignore[attr-defined]
-            height_ratio: Decimal = event.get_height() / event.get_image().height  # type: ignore[attr-defined]
+            width_ratio: Decimal = event.get_width() / event.get_image().width
+            height_ratio: Decimal = event.get_height() / event.get_image().height
 
             number_of_boxes: int = len(data["level"])
             for i in range(0, number_of_boxes):
-
                 x: Decimal = Decimal(data["left"][i])
                 # tesseract considers (LEFT, TOP) to be the origin
                 # PDF prefers (LEFT, BOTTOM)
                 # the following code fixes the mismatch
                 y: Decimal = (
-                    Decimal(event.get_image().height)  # type: ignore [attr-defined]
+                    Decimal(event.get_image().height)
                     - Decimal(data["top"][i])
                     - Decimal(data["height"][i])
                 )
@@ -202,7 +201,7 @@ class OCRImageRenderEventListener(EventListener):
                     ),
                     0,
                 )
-                font_color: RGBColor = self._get_font_color(
+                font_color: Color = self._get_font_color(
                     text_in_bounding_box, event.get_image(), image_bounding_box
                 )
                 self._ocr_text_occurred(
@@ -220,12 +219,11 @@ class OCRImageRenderEventListener(EventListener):
     def _get_font_color(
         self,
         text: str,
-        image: PILImage,  # type: ignore[valid-type]
+        image: PILImageModule.Image,
         image_bounding_box: Rectangle,
-    ) -> RGBColor:
-
-        # build empty PILImage
-        text_image: PILImage = PILImage.new(  # type: ignore[valid-type]
+    ) -> Color:
+        # build empty PILImageModule
+        text_image: PILImageModule.Image = PILImageModule.new(
             "RGB",
             (int(image_bounding_box.get_width()), int(image_bounding_box.get_height())),
             color=(255, 255, 255),
@@ -250,9 +248,9 @@ class OCRImageRenderEventListener(EventListener):
             percentage_of_text_pixels: Decimal = Decimal(0)
             max_x: int = 0
             max_y: int = 0
-            for i in range(0, text_image.width):  # type: ignore[attr-defined]
-                for j in range(0, text_image.height):  # type: ignore[attr-defined]
-                    if text_image.getpixel((i, j)) == (0, 0, 0):  # type: ignore[attr-defined]
+            for i in range(0, text_image.width):
+                for j in range(0, text_image.height):
+                    if text_image.getpixel((i, j)) == (0, 0, 0):
                         percentage_of_text_pixels += Decimal(1)
                         max_x = max(max_x, i)
                         max_y = max(max_y, j)
@@ -264,17 +262,17 @@ class OCRImageRenderEventListener(EventListener):
             return HexColor("000000")
 
         # crop image
-        cropped_image = image.crop(  # type: ignore[attr-defined]
+        cropped_image = image.crop(
             (
-                image_bounding_box.x,
-                image.height - image_bounding_box.y - image_bounding_box.height,  # type: ignore[attr-defined]
-                image_bounding_box.x + image_bounding_box.width,  # type: ignore[attr-defined]
-                image.height - image_bounding_box.y,  # type: ignore[attr-defined]
+                int(image_bounding_box.x),
+                int(image.height - image_bounding_box.y - image_bounding_box.height),
+                int(image_bounding_box.x + image_bounding_box.width),
+                int(image.height - image_bounding_box.y),
             )
         )
 
         # count number of pixels in cropped image
-        number_of_pixels_in_cropped_image: Decimal = (
+        number_of_pixels_in_cropped_image: Decimal = Decimal(
             cropped_image.width * cropped_image.height
         )
 

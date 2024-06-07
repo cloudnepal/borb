@@ -20,8 +20,20 @@ class BeginCompatibilitySection(CanvasOperator):
     is encountered.
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("BX", 0)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -31,5 +43,9 @@ class BeginCompatibilitySection(CanvasOperator):
     ) -> None:
         """
         Invoke the BX operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         canvas_stream_processor.get_canvas().in_compatibility_section = True

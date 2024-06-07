@@ -7,7 +7,10 @@ This CanvasOperator copies an existing operator and writes its bytes to a conten
 import typing
 from decimal import Decimal
 
-from borb.io.read.types import AnyPDFType, HexadecimalString, String, Name
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import HexadecimalString
+from borb.io.read.types import Name
+from borb.io.read.types import String
 from borb.pdf.canvas.operator.canvas_operator import CanvasOperator
 
 
@@ -35,9 +38,9 @@ class CopyCommandOperator(CanvasOperator):
         if isinstance(op, Decimal):
             return str(op)
         if isinstance(op, HexadecimalString):
-            return "<" + op._text + ">"
+            return "<" + str(op) + ">"
         if isinstance(op, String):
-            return "(" + op._text + ")"
+            return "(" + str(op) + ")"
         if isinstance(op, Name):
             return "/" + str(op)
         if isinstance(op, list):
@@ -62,12 +65,16 @@ class CopyCommandOperator(CanvasOperator):
 
     def invoke(
         self,
-        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore [name-defined]
+        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore[name-defined]
         operands: typing.List[AnyPDFType] = [],
-        event_listeners: typing.List["EventListener"] = [],  # type: ignore [name-defined]
+        event_listeners: typing.List["EventListener"] = [],  # type: ignore[name-defined]
     ) -> None:
         """
         Invokes this CanvasOperator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may need to be notified
+        :return:                            None
         """
 
         # execute command

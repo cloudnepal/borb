@@ -6,12 +6,17 @@ This implementation of WriteBaseTransformer is responsible for writing Dictionar
 """
 import logging
 import typing
-from typing import Optional
 
-from PIL.Image import Image  # type: ignore [import]
+from PIL import Image as PILImageModule
 
-from borb.io.read.types import AnyPDFType, Dictionary, Element, List, Reference, Stream
-from borb.io.write.transformer import Transformer, WriteTransformerState
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Element
+from borb.io.read.types import List
+from borb.io.read.types import Reference
+from borb.io.read.types import Stream
+from borb.io.write.transformer import Transformer
+from borb.io.write.transformer import WriteTransformerState
 
 logger = logging.getLogger(__name__)
 
@@ -33,20 +38,26 @@ class DictionaryTransformer(Transformer):
     # PUBLIC
     #
 
-    def can_be_transformed(self, any: AnyPDFType):
+    def can_be_transformed(self, object: AnyPDFType):
         """
-        This function returns True if the object to be converted represents an Dictionary object
+        This function returns True if the object to be transformed is a Dictionary
+        :param object:  the object to be transformed
+        :return:        True if the object is a Dictionary, False otherwise
         """
-        return isinstance(any, Dictionary)
+        return isinstance(object, Dictionary)
 
     def transform(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState] = None,
+        context: typing.Optional[WriteTransformerState] = None,
     ):
         """
-        This method writes a Dictionary to a byte stream
+        This function transforms a Dictionary into a byte stream
+        :param object_to_transform:     the Dictionary to transform
+        :param context:                 the WriteTransformerState (containing passwords, etc)
+        :return:                        a (serialized) Dictionary
         """
+
         # fmt: off
         assert isinstance(object_to_transform, Dictionary), "object_to_transform must be of type Dictionary"
         assert (context is not None), "context must be defined in order to write Dictionary objects."
@@ -76,7 +87,7 @@ class DictionaryTransformer(Transformer):
                 isinstance(v, Dictionary)
                 or isinstance(v, List)
                 or isinstance(v, Stream)
-                or isinstance(v, Image)
+                or isinstance(v, PILImageModule.Image)
                 or isinstance(v, Element)
             ) and not v.is_inline():
                 out_value[k] = self.get_reference(v, context)

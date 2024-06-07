@@ -2,106 +2,128 @@ import unittest
 from pathlib import Path
 
 from borb.io.read.types import Decimal
-from borb.pdf import Page, SingleColumnLayout, PageLayout
+from borb.pdf import Page, SingleColumnLayoutWithOverflow
+from borb.pdf import PageLayout
+from borb.pdf import SingleColumnLayout
 from borb.pdf.document.document import Document
 from borb.pdf.page.page_size import PageSize
 from borb.pdf.pdf import PDF
 from borb.toolkit.export.html_to_pdf.html_to_pdf import HTMLToPDF
-from tests.test_util import compare_visually_to_ground_truth, check_pdf_using_validator
+from tests.test_case import TestCase
 
 
-class TestExportHTMLToPDF(unittest.TestCase):
-    def __init__(self, methodName="runTest"):
-        super().__init__(methodName)
-        # find output dir
-        p: Path = Path(__file__).parent
-        while "output" not in [x.stem for x in p.iterdir() if x.is_dir()]:
-            p = p.parent
-        p = p / "output"
-        self.output_dir = Path(p, Path(__file__).stem.replace(".py", ""))
-        if not self.output_dir.exists():
-            self.output_dir.mkdir()
-
+class TestExportHTMLToPDF(TestCase):
     def test_example_000(self):
-        self._test_convert_document("example_html_input_000.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_000.html"
+        )
 
     def test_example_001(self):
-        self._test_convert_document("example_html_input_001.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_001.html"
+        )
 
     def test_example_002(self):
-        self._test_convert_document("example_html_input_002.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_002.html"
+        )
 
     def test_example_003(self):
-        self._test_convert_document("example_html_input_003.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_003.html"
+        )
 
     def test_example_004(self):
-        self._test_convert_document("example_html_input_004.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_004.html"
+        )
 
     def test_example_005(self):
-        self._test_convert_document("example_html_input_005.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_005.html"
+        )
 
     def test_example_006(self):
-        self._test_convert_document("example_html_input_006.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_006.html"
+        )
 
     def test_example_007(self):
-        self._test_convert_document("example_html_input_007.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_007.html"
+        )
 
     def test_example_008(self):
-        self._test_convert_document("example_html_input_008.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_008.html",
+            width=PageSize.A3_LANDSCAPE.value[0],
+            height=PageSize.A3_LANDSCAPE.value[1],
+        )
 
     def test_example_009(self):
-        self._test_convert_document("example_html_input_009.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_009.html"
+        )
 
     @unittest.skip
     def test_example_010(self):
-        # TODO: fix test
-        self._test_convert_document("example_html_input_010.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_010.html"
+        )
 
     def test_example_011(self):
-        self._test_convert_document("example_html_input_011.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_011.html"
+        )
 
     def test_example_012(self):
-        self._test_convert_document("example_html_input_012.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_012.html"
+        )
 
     def test_example_013(self):
-        self._test_convert_document("example_html_input_013.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_013.html"
+        )
 
     def test_example_014(self):
-        self._test_convert_document("example_html_input_014.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_014.html"
+        )
 
     def test_example_015(self):
-        self._test_convert_document("example_html_input_015.html")
+        self._export_html_to_pdf(
+            self.get_artifacts_directory() / "example_html_input_015.html"
+        )
 
-    def _test_convert_document(self, file_to_convert: str):
-
-        # create output directory if it does not exist yet
-        if not self.output_dir.exists():
-            self.output_dir.mkdir()
+    def _export_html_to_pdf(
+        self,
+        input_file: Path,
+        width: Decimal = PageSize.A4_PORTRAIT.value[0],
+        height: Decimal = PageSize.A4_PORTRAIT.value[1],
+    ):
 
         txt: str = ""
-        path_to_json = Path(__file__).parent / file_to_convert
-        with open(path_to_json, "r") as json_file_handle:
-            txt = json_file_handle.read()
+        with open(input_file, "r") as fh:
+            txt = fh.read()
 
         # convert
         document: Document = Document()
-        page: Page = Page(
-            width=PageSize.A4_PORTRAIT.value[0], height=PageSize.A4_PORTRAIT.value[1]
-        )
+        page: Page = Page(width=width, height=height)
         document.add_page(page)
-        layout: PageLayout = SingleColumnLayout(
-            page, vertical_margin=Decimal(0), horizontal_margin=Decimal(12)
-        )
+        layout: PageLayout = SingleColumnLayoutWithOverflow(page)
+        layout._margin_top = Decimal(12)
+        layout._margin_right = Decimal(0)
+        layout.margin_bottom = Decimal(12)
+        layout._margin_left = Decimal(0)
         layout.add(HTMLToPDF.convert_html_to_layout_element(txt))
 
         # store
-        out_file = self.output_dir / (file_to_convert.replace(".html", ".pdf"))
+        out_file = input_file.parent / (input_file.stem + ".pdf")
         with open(out_file, "wb") as pdf_file_handle:
             PDF.dumps(pdf_file_handle, document)
-
-        # compare visually
-        compare_visually_to_ground_truth(out_file)
-        check_pdf_using_validator(out_file)
+        self.compare_visually_to_ground_truth(out_file)
+        self.check_pdf_using_validator(out_file)
 
 
 if __name__ == "__main__":

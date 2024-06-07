@@ -18,8 +18,20 @@ class SetTextRenderingMode(CanvasOperator):
     Initial value: 0.
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("Tr", 1)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -29,6 +41,10 @@ class SetTextRenderingMode(CanvasOperator):
     ) -> None:
         """
         Invoke the Tr operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         # TODO
         pass

@@ -17,11 +17,11 @@ import io
 import re
 import typing
 
-from borb.pdf.document.document import Document
 from borb.pdf.canvas.canvas import Canvas
 from borb.pdf.canvas.canvas_stream_processor import CanvasStreamProcessor
 from borb.pdf.canvas.event.begin_page_event import BeginPageEvent
 from borb.pdf.canvas.event.end_page_event import EndPageEvent
+from borb.pdf.document.document import Document
 from borb.pdf.page.page import Page
 from borb.toolkit.text.simple_text_extraction import SimpleTextExtraction
 from borb.toolkit.text.stop_words import ENGLISH_STOP_WORDS
@@ -70,7 +70,6 @@ class TextRankKeywordExtraction(SimpleTextExtraction):
         # turn txt into lines
         lines = [x for x in re.split("\n*[.?!]+\n*", txt) if len(x) != 0]
         for line in lines:
-
             # split
             tokens: typing.List[str] = [
                 x for x in re.split("[^A-Z]+", line.upper()) if len(x) > 3

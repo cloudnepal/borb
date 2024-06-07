@@ -11,8 +11,12 @@ appearance of the text in these annotations.
 import typing
 from decimal import Decimal
 
-from borb.io.read.types import Name, Decimal as bDecimal, Dictionary, String
-from borb.pdf.canvas.color.color import HexColor, Color
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Name
+from borb.io.read.types import String
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.font.simple_font.font_type_1 import StandardType1Font
 from borb.pdf.canvas.geometry.rectangle import Rectangle
@@ -38,10 +42,9 @@ class FreeTextAnnotation(Annotation):
         contents: str,
         background_color: typing.Optional[Color] = None,
         font: Font = StandardType1Font("Helvetica"),
-        font_size: Decimal = Decimal(12),
         font_color: Color = HexColor("000000"),
+        font_size: Decimal = Decimal(12),
     ):
-
         super(FreeTextAnnotation, self).__init__(
             bounding_box=bounding_box, contents=contents, color=background_color
         )

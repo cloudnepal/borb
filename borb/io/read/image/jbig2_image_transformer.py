@@ -7,13 +7,14 @@ This implementation of ReadBaseTransformer is responsible for reading a jbig2 im
 import io
 import logging
 import typing
-from typing import Any, Optional, Union
 
-from PIL import Image  # type: ignore [import]
+from PIL import Image as PILImageModule
 
 from borb.io.read.pdf_object import PDFObject
-from borb.io.read.transformer import ReadTransformerState, Transformer
-from borb.io.read.types import AnyPDFType, Stream
+from borb.io.read.transformer import ReadTransformerState
+from borb.io.read.transformer import Transformer
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Stream
 from borb.pdf.canvas.event.event_listener import EventListener
 
 logger = logging.getLogger(__name__)
@@ -37,10 +38,13 @@ class JBIG2ImageTransformer(Transformer):
     #
 
     def can_be_transformed(
-        self, object: Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType]
+        self,
+        object: typing.Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType],
     ) -> bool:
         """
-        This function returns True if the object to be transformed is a JBIG2 object
+        This function returns True if the object to be transformed is a JBIG2Decode Image
+        :param object:  the object to be transformed
+        :return:        True if the object is a JBIG2Decode Image, False otherwise
         """
         return (
             isinstance(object, Stream)
@@ -58,13 +62,18 @@ class JBIG2ImageTransformer(Transformer):
 
     def transform(
         self,
-        object_to_transform: Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
-        parent_object: Any,
-        context: Optional[ReadTransformerState] = None,
+        object_to_transform: typing.Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
+        parent_object: typing.Any,
+        context: typing.Optional[ReadTransformerState] = None,
         event_listeners: typing.List[EventListener] = [],
-    ) -> Any:
+    ) -> typing.Any:
         """
-        This function reads a JBIG Image from a byte stream
+        This function transforms an Image Dictionary into an Image Object
+        :param object_to_transform:     the Image Dictionary to transform
+        :param parent_object:           the parent Object
+        :param context:                 the ReadTransformerState (containing passwords, etc)
+        :param event_listeners:         the EventListener objects that may need to be notified
+        :return:                        an Image Object
         """
 
         # use PIL to read image bytes
@@ -72,7 +81,7 @@ class JBIG2ImageTransformer(Transformer):
         assert isinstance(object_to_transform, Stream), "object_to_transform must be of type Stream"
         # fmt: on
         try:
-            tmp = Image.open(io.BytesIO(object_to_transform["Bytes"]))
+            tmp = PILImageModule.open(io.BytesIO(object_to_transform["Bytes"]))
             tmp.getpixel(
                 (0, 0)
             )  # attempting to read pixel 0,0 will trigger an error if the underlying image does not exist
@@ -82,7 +91,7 @@ class JBIG2ImageTransformer(Transformer):
             )
             w = int(object_to_transform["Width"])
             h = int(object_to_transform["Height"])
-            tmp = Image.new("RGB", (w, h), (128, 128, 128))
+            tmp = PILImageModule.new("RGB", (w, h), (128, 128, 128))
 
         # add base methods
         PDFObject.add_pdf_object_methods(tmp)

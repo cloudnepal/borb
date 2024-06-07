@@ -10,15 +10,21 @@ import zlib
 from decimal import Decimal
 
 from borb.io.read.pdf_object import PDFObject
-from borb.pdf.canvas.layout.layout_element import Alignment
 from borb.io.read.types import Boolean
 from borb.io.read.types import Decimal as bDecimal
-from borb.io.read.types import Dictionary, List as bList, Name, Stream, String
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List as bList
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
+from borb.io.read.types import String
 from borb.io.read.types import String as bString
-from borb.pdf.canvas.color.color import Color, HexColor, RGBColor
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
+from borb.pdf.canvas.color.color import RGBColor
 from borb.pdf.canvas.font.simple_font.font_type_1 import StandardType1Font
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.forms.form_field import FormField
+from borb.pdf.canvas.layout.layout_element import Alignment
 from borb.pdf.page.page import Page
 
 
@@ -33,7 +39,7 @@ class CheckBox(FormField):
 
     def __init__(
         self,
-        # background_color: typing.Optional[Color] = None,
+        background_color: typing.Optional[Color] = None,
         border_bottom: bool = True,
         border_color: Color = HexColor("808080"),
         border_left: bool = True,
@@ -59,7 +65,7 @@ class CheckBox(FormField):
         vertical_alignment: Alignment = Alignment.TOP,
     ):
         super(CheckBox, self).__init__(
-            # background_color=background_color,
+            background_color=background_color,
             border_bottom=border_bottom,
             border_color=border_color,
             border_left=border_left,
@@ -70,6 +76,8 @@ class CheckBox(FormField):
             border_right=border_right,
             border_top=border_top,
             border_width=border_width,
+            font="Helvetica",
+            font_color=font_color,
             font_size=font_size,
             horizontal_alignment=horizontal_alignment,
             margin_bottom=margin_bottom,
@@ -82,9 +90,6 @@ class CheckBox(FormField):
             padding_top=padding_top,
             vertical_alignment=vertical_alignment,
         )
-        assert font_size is None or font_size >= 0
-        self._font_size: Decimal = font_size
-        self._font_color = font_color
         self._field_name: typing.Optional[str] = field_name
         self._widget_dictionary: typing.Optional[Dictionary] = None
 
@@ -93,6 +98,7 @@ class CheckBox(FormField):
     #
 
     def _get_content_box(self, available_space: Rectangle) -> Rectangle:
+        assert self._font_size is not None
         line_height: Decimal = self._font_size * Decimal(1.2)
         return Rectangle(
             available_space.x,
@@ -102,7 +108,6 @@ class CheckBox(FormField):
         )
 
     def _init_widget_dictionary(self, page: Page, layout_box: Rectangle) -> None:
-
         if self._widget_dictionary is not None:
             return
 
@@ -163,7 +168,7 @@ class CheckBox(FormField):
         # widget appearance dictionary
         widget_appearance_dictionary: Dictionary = Dictionary()
         widget_appearance_dictionary[Name("N")] = widget_normal_appearance
-        widget_appearance_dictionary.set_is_unique(True)  # type: ignore [attr-defined]
+        widget_appearance_dictionary.set_is_unique(True)
 
         # get Catalog
         catalog: Dictionary = root["XRef"]["Trailer"]["Root"]  # type: ignore [attr-defined]
@@ -174,7 +179,7 @@ class CheckBox(FormField):
         # widget dictionary
         # fmt: off
         self._widget_dictionary = Dictionary()
-        self._widget_dictionary.set_is_unique(True)  # type: ignore [attr-defined]
+        self._widget_dictionary.set_is_unique(True)
         self._widget_dictionary[Name("AP")] = widget_appearance_dictionary
         self._widget_dictionary[Name("AS")] = Name("Off")
         self._widget_dictionary[Name("DA")] = String(
@@ -194,7 +199,7 @@ class CheckBox(FormField):
         self._widget_dictionary[Name("MK")] = Dictionary()
         self._widget_dictionary[Name("MK")][Name("CA")] = bString("8")
         self._widget_dictionary[Name("P")] = catalog
-        self._widget_dictionary[Name("Rect")] = bList().set_is_inline(True)  # type: ignore [attr-defined]
+        self._widget_dictionary[Name("Rect")] = bList().set_is_inline(True)
         self._widget_dictionary["Rect"].append(bDecimal(layout_box.x))
         self._widget_dictionary["Rect"].append(bDecimal(layout_box.y + layout_box.height - self._font_size - 2))
         self._widget_dictionary["Rect"].append(bDecimal(layout_box.x + layout_box.width))
@@ -219,12 +224,12 @@ class CheckBox(FormField):
         catalog["AcroForm"]["Fields"].append(self._widget_dictionary)
 
     def _paint_content_box(self, page: "Page", content_box: Rectangle) -> None:
-
         # init self._widget_dictionary
         self._init_widget_dictionary(page, content_box)
 
         # set location
         # fmt: off
+        assert self._font_size is not None
         line_height: Decimal = self._font_size * Decimal(1.2)
         if self._widget_dictionary is not None:
             self._widget_dictionary["Rect"][0] = bDecimal(content_box.get_x())

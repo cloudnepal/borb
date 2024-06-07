@@ -11,9 +11,6 @@ import typing
 import urllib.request
 from decimal import Decimal
 
-import keyring as keyring  # type: ignore [import]
-from keyring import get_keyring  # type: ignore [import]
-
 from borb.pdf.canvas.layout.image.image import Image
 
 
@@ -56,13 +53,13 @@ class Unsplash:
         keyword_str: str = "".join([(k + "+") for k in keywords])[:-1]
 
         # get access_key
-        get_keyring()
+        import keyring  # type: ignore[import]
+
+        keyring.get_keyring()
         unsplash_access_key: typing.Optional[str] = keyring.get_password(
             "unsplash", "access_key"
         )
-        assert (
-            unsplash_access_key is not None
-        ), "An access key must be specified to use the unsplash API."
+        assert unsplash_access_key is not None
 
         # fetch json
         min_delta: typing.Optional[Decimal] = None

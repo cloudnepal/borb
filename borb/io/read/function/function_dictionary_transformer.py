@@ -7,11 +7,16 @@ This implementation of ReadBaseTransformer is responsible for reading a Function
 import io
 import typing
 from decimal import Decimal
-from typing import Any, Optional, Union
 
 from borb.io.filter.stream_decode_util import decode_stream
-from borb.io.read.transformer import ReadTransformerState, Transformer
-from borb.io.read.types import AnyPDFType, Dictionary, Function, Name, Reference, Stream
+from borb.io.read.transformer import ReadTransformerState
+from borb.io.read.transformer import Transformer
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Function
+from borb.io.read.types import Name
+from borb.io.read.types import Reference
+from borb.io.read.types import Stream
 from borb.pdf.canvas.event.event_listener import EventListener
 
 
@@ -33,10 +38,13 @@ class FunctionDictionaryTransformer(Transformer):
     #
 
     def can_be_transformed(
-        self, object: Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType]
+        self,
+        object: typing.Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType],
     ) -> bool:
         """
         This function returns True if the object to be transformed is a Dictionary with /FunctionType key
+        :param object:  the object to be transformed
+        :return:        True if the object is a FunctionType Dictionary, False otherwise
         """
         return (
             isinstance(object, dict)
@@ -47,13 +55,18 @@ class FunctionDictionaryTransformer(Transformer):
 
     def transform(
         self,
-        object_to_transform: Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
-        parent_object: Any,
-        context: Optional[ReadTransformerState] = None,
+        object_to_transform: typing.Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
+        parent_object: typing.Any,
+        context: typing.Optional[ReadTransformerState] = None,
         event_listeners: typing.List[EventListener] = [],
-    ) -> Any:
+    ) -> typing.Any:
         """
-        This function reads a Dictionary with /FunctionType key from a byte stream.
+        This function transforms a FunctionType Dictionary into a Function Object
+        :param object_to_transform:     the FunctionType Dictionary to transform
+        :param parent_object:           the parent Object
+        :param context:                 the ReadTransformerState (containing passwords, etc)
+        :param event_listeners:         the EventListener objects that may need to be notified
+        :return:                        a Function Object
         """
         # fmt: off
         assert isinstance(object_to_transform, Dictionary), "object_to_transform must be of type Dictionary."
@@ -67,11 +80,11 @@ class FunctionDictionaryTransformer(Transformer):
         transformed_object: Function = Function()
 
         if isinstance(object_to_transform, Stream):
+            # fmt: off
             decode_stream(object_to_transform)
             transformed_object[Name("Bytes")] = object_to_transform["Bytes"]
-            transformed_object[Name("DecodedBytes")] = object_to_transform[
-                "DecodedBytes"
-            ]
+            transformed_object[Name("DecodedBytes")] = object_to_transform["DecodedBytes"]
+            # fmt: on
 
         # resolve references in stream dictionary
         # fmt: off

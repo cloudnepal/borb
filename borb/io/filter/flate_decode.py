@@ -2,20 +2,26 @@
 # -*- coding: utf-8 -*-
 
 """
-(PDF 1.2) Decompresses data encoded using the zlib/deflate
-compression method, reproducing the original text or binary
-data.
+LZW and Flate encoding compress more compactly if their input data is highly predictable.
+One way of increasing the predictability of many continuous-tone sampled images is to replace each sample with the
+difference between that sample and a predictor function applied to earlier neighboring samples.
+If the predictor function works well, the postprediction data clusters toward 0.
+PDF supports two groups of Predictor functions.
+The first, the TIFF group, consists of the single function that is Predictor 2 in the TIFF 6.0 specification.
 """
 import copy
+import typing
 import zlib
-from typing import List
 
 
 class FlateDecode:
     """
-    (PDF 1.2) Decompresses data encoded using the zlib/deflate
-    compression method, reproducing the original text or binary
-    data.
+    LZW and Flate encoding compress more compactly if their input data is highly predictable.
+    One way of increasing the predictability of many continuous-tone sampled images is to replace each sample with the
+    difference between that sample and a predictor function applied to earlier neighboring samples.
+    If the predictor function works well, the postprediction data clusters toward 0.
+    PDF supports two groups of Predictor functions.
+    The first, the TIFF group, consists of the single function that is Predictor 2 in the TIFF 6.0 specification.
     """
 
     #
@@ -33,13 +39,22 @@ class FlateDecode:
     @staticmethod
     def decode(
         bytes_in: bytes,
-        predictor: int = 1,
         bits_per_component: int = 8,
         columns: int = 1,
+        predictor: int = 1,
     ) -> bytes:
         """
-        Decompresses data encoded using the zlib/deflate
-        compression method
+        LZW and Flate encoding compress more compactly if their input data is highly predictable.
+        One way of increasing the predictability of many continuous-tone sampled images is to replace each sample with the
+        difference between that sample and a predictor function applied to earlier neighboring samples.
+        If the predictor function works well, the postprediction data clusters toward 0.
+        PDF supports two groups of Predictor functions.
+        The first, the TIFF group, consists of the single function that is Predictor 2 in the TIFF 6.0 specification.
+        :param bytes_in:            the input bytes
+        :param bits_per_component:  the number of bits per component
+        :param columns:             the number of columns
+        :param predictor:           which predictor to use
+        :return:                    the output bytes
         """
 
         # trivial case
@@ -74,8 +89,8 @@ class FlateDecode:
         bytes_per_row: int = int((columns * bits_per_component + 7) / 8)
         bytes_per_pixel = int(bits_per_component / 8)
 
-        current_row: List[int] = [0 for _ in range(0, bytes_per_row)]
-        prior_row: List[int] = [0 for _ in range(0, bytes_per_row)]
+        current_row: typing.List[int] = [0 for _ in range(0, bytes_per_row)]
+        prior_row: typing.List[int] = [0 for _ in range(0, bytes_per_row)]
         number_of_rows = int(len(bytes_after_zlib) / bytes_per_row)
 
         # easy case
@@ -95,7 +110,6 @@ class FlateDecode:
         bytes_after_predictor = []
         pos = 0
         while pos + bytes_per_row <= len(bytes_after_zlib):
-
             # Read the filter type byte and a row of data
             filter_type = bytes_after_zlib[pos]
             pos += 1

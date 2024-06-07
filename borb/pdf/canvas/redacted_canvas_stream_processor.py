@@ -7,7 +7,11 @@ This module contains all classes needed to apply redaction on a Page in a PDF Do
 import typing
 from decimal import Decimal
 
-from borb.io.read.types import AnyPDFType, HexadecimalString, List, Name, String
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import HexadecimalString
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import String
 from borb.pdf.canvas.canvas_stream_processor import CanvasStreamProcessor
 from borb.pdf.canvas.event.chunk_of_text_render_event import ChunkOfTextRenderEvent
 from borb.pdf.canvas.geometry.rectangle import Rectangle
@@ -49,9 +53,9 @@ class CopyCommandOperator(CanvasOperator):
 
     def invoke(
         self,
-        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore [name-defined]
+        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore[name-defined]
         operands: typing.List[AnyPDFType] = [],
-        event_listeners: typing.List["EventListener"] = [],  # type: ignore [name-defined]
+        event_listeners: typing.List["EventListener"] = [],  # type: ignore[name-defined]
     ) -> None:
         """
         Invokes this CanvasOperator
@@ -70,17 +74,20 @@ class CopyCommandOperator(CanvasOperator):
                 op_str.append(str(op))
                 continue
             if isinstance(op, HexadecimalString):
-                op_str.append("<" + op._text + ">")
+                op_str.append("<" + str(op) + ">")
                 continue
             if isinstance(op, String):
-                op_str.append("(" + op._text + ")")
+                op_str.append("(" + str(op) + ")")
                 continue
             if isinstance(op, Name):
                 op_str.append("/" + str(op))
                 continue
 
-        canvas_stream_processor._redacted_content += (  # type: ignore [attr-defined]
-            "\n" + "".join([(s + " ") for s in op_str]) + self.get_text()
+        assert isinstance(canvas_stream_processor, RedactedCanvasStreamProcessor)
+        canvas_stream_processor.append_to_redacted_content(
+            ("\n" + "".join([(s + " ") for s in op_str]) + self.get_text()).encode(
+                "latin1"
+            )
         )
 
 
@@ -103,21 +110,27 @@ class ShowTextMod(CanvasOperator):
     def _show_text_unmodified(
         self, canvas_stream_processor: "CanvasStreamProcessor", s: String
     ) -> None:
+        assert isinstance(canvas_stream_processor, RedactedCanvasStreamProcessor)
         if isinstance(s, HexadecimalString):
-            canvas_stream_processor._redacted_content += "\n<" + str(s) + "> Tj"  # type: ignore [attr-defined]
+            canvas_stream_processor.append_to_redacted_content(
+                ("\n<" + str(s) + "> Tj").encode("latin1")
+            )
             return
         if isinstance(s, String):
-            canvas_stream_processor._redacted_content += "\n(" + str(s) + ") Tj"  # type: ignore [attr-defined]
+            canvas_stream_processor.append_to_redacted_content(
+                ("\n(" + str(s) + ") Tj").encode("latin1")
+            )
 
     def _write_chunk_of_text(
-        self, canvas_stream_processor: "CanvasStreamProcessor", s: str, f: "Font"  # type: ignore [name-defined]
+        self, canvas_stream_processor: "CanvasStreamProcessor", s: str, f: "Font"  # type: ignore[name-defined]
     ):
         from borb.pdf.canvas.layout.text.chunk_of_text import ChunkOfText
 
-        canvas_stream_processor._redacted_content += "\n"  # type: ignore[attr-defined]
-        canvas_stream_processor._redacted_content += ChunkOfText(  # type: ignore [attr-defined]
-            s, f
-        )._write_text_bytes()
+        assert isinstance(canvas_stream_processor, RedactedCanvasStreamProcessor)
+        canvas_stream_processor.append_to_redacted_content(b"\n")
+        canvas_stream_processor.append_to_redacted_content(
+            ChunkOfText(s, f)._write_text_bytes().encode("latin1")
+        )
 
     #
     # PUBLIC
@@ -125,15 +138,16 @@ class ShowTextMod(CanvasOperator):
 
     def invoke(
         self,
-        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore [name-defined]
+        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore[name-defined]
         operands: typing.List[AnyPDFType] = [],
-        event_listeners: typing.List["EventListener"] = [],  # type: ignore [name-defined]
+        event_listeners: typing.List["EventListener"] = [],  # type: ignore[name-defined]
     ) -> None:
         """
         Invokes this CanvasOperator
         """
 
         assert isinstance(operands[0], String)
+        assert isinstance(canvas_stream_processor, RedactedCanvasStreamProcessor)
 
         # handle Font being a Name (optimization)
         canvas = canvas_stream_processor.get_canvas()
@@ -156,19 +170,18 @@ class ShowTextMod(CanvasOperator):
         for evt in ChunkOfTextRenderEvent(
             canvas.graphics_state, operands[0]
         ).split_on_glyphs():
-
+            evt_previous_layout_box: typing.Optional[
+                Rectangle
+            ] = evt.get_previous_layout_box()
+            assert evt_previous_layout_box is not None
             letter_should_be_redacted: bool = any(
                 [
-                    x.intersects(evt.get_previous_layout_box())
+                    x.intersects(evt_previous_layout_box)
                     for x in canvas_stream_processor._redacted_rectangles  # type: ignore[attr-defined]
                 ]
             )
             graphics_state = canvas_stream_processor.get_canvas().graphics_state
-            event_bounding_box: typing.Optional[
-                Rectangle
-            ] = evt.get_previous_layout_box()
-            assert event_bounding_box is not None
-            w: Decimal = event_bounding_box.get_width()
+            w: Decimal = evt_previous_layout_box.get_width()
 
             if letter_should_be_redacted:
                 # update text_matrix
@@ -224,10 +237,11 @@ class ShowTextWithGlyphPositioningMod(CanvasOperator):
     ):
         from borb.pdf.canvas.layout.text.chunk_of_text import ChunkOfText
 
-        canvas_stream_processor._redacted_content += "\n"  # type: ignore[attr-defined]
-        canvas_stream_processor._redacted_content += ChunkOfText(  # type: ignore[attr-defined]
-            s, f
-        )._write_text_bytes()
+        assert isinstance(canvas_stream_processor, RedactedCanvasStreamProcessor)
+        canvas_stream_processor.append_to_redacted_content(b"\n")
+        canvas_stream_processor.append_to_redacted_content(
+            ChunkOfText(s, f)._write_text_bytes().encode("latin1")
+        )
 
     #
     # PUBLIC
@@ -235,9 +249,9 @@ class ShowTextWithGlyphPositioningMod(CanvasOperator):
 
     def invoke(
         self,
-        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore [name-defined]
+        canvas_stream_processor: "CanvasStreamProcessor",  # type: ignore[name-defined]
         operands: typing.List[AnyPDFType] = [],
-        event_listeners: typing.List["EventListener"] = [],  # type: ignore [name-defined]
+        event_listeners: typing.List["EventListener"] = [],  # type: ignore[name-defined]
     ) -> None:
         """
         Invoke the TJ operator
@@ -266,7 +280,6 @@ class ShowTextWithGlyphPositioningMod(CanvasOperator):
                 for evt in ChunkOfTextRenderEvent(
                     canvas.graphics_state, obj
                 ).split_on_glyphs():
-
                     letter_should_be_redacted: bool = any(
                         [
                             x.intersects(evt.get_previous_layout_box())
@@ -307,7 +320,6 @@ class ShowTextWithGlyphPositioningMod(CanvasOperator):
 
             # process Decimal objects
             if isinstance(obj, Decimal):
-
                 # calculate the adjustment
                 assert isinstance(obj, Decimal)
                 gs = canvas.graphics_state
@@ -321,13 +333,19 @@ class ShowTextWithGlyphPositioningMod(CanvasOperator):
                 gs.text_matrix[2][0] -= adjust_scaled
 
                 # write operator
-                canvas_stream_processor._redacted_content += "\n%f %f %f %f %f %f Tm" % (  # type: ignore [attr-defined]
-                    gs.text_matrix[0][0],
-                    gs.text_matrix[0][1],
-                    gs.text_matrix[1][0],
-                    gs.text_matrix[1][1],
-                    gs.text_matrix[2][0],
-                    gs.text_matrix[2][1],
+                assert isinstance(
+                    canvas_stream_processor, RedactedCanvasStreamProcessor
+                )
+                canvas_stream_processor.append_to_redacted_content(
+                    b"\n%f %f %f %f %f %f Tm"
+                    % (  # type: ignore [attr-defined]
+                        gs.text_matrix[0][0],
+                        gs.text_matrix[0][1],
+                        gs.text_matrix[1][0],
+                        gs.text_matrix[1][1],
+                        gs.text_matrix[2][0],
+                        gs.text_matrix[2][1],
+                    )
                 )
 
         # restore
@@ -356,7 +374,7 @@ class RedactedCanvasStreamProcessor(CanvasStreamProcessor):
         super(RedactedCanvasStreamProcessor, self).__init__(page, canvas, [])
 
         # redacted content
-        self._redacted_content = ""
+        self._redacted_content: str = ""
 
         # redacted rectangle
         self._redacted_rectangles = redacted_rectangles
@@ -386,3 +404,21 @@ class RedactedCanvasStreamProcessor(CanvasStreamProcessor):
         This function returns the redacted content of this implementation of CanvasStreamProcessor
         """
         return self._redacted_content.encode("latin1")
+
+    def set_redacted_content(self, bts: bytes) -> "RedactedCanvasStreamProcessor":
+        """
+        This function sets the (redacted) content of this RedactedCanvasStreamProcessor
+        :param bts:     the content to be set
+        :return:        self
+        """
+        self._redacted_content = bts.decode("latin1")
+        return self
+
+    def append_to_redacted_content(self, bts: bytes) -> "RedactedCanvasStreamProcessor":
+        """
+        This function appends the given bytes to the (redacted) content of this RedactedCanvasStreamProcessor
+        :param bts:     the bytes to append
+        :return:        self
+        """
+        self._redacted_content += bts.decode("latin1")
+        return self

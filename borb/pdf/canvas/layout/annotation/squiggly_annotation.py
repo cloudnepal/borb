@@ -10,8 +10,13 @@ annotations.
 import zlib
 from decimal import Decimal
 
-from borb.io.read.types import Name, Stream, Dictionary, List, Decimal as bDecimal
-from borb.pdf.canvas.color.color import HexColor, Color
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
 
@@ -31,13 +36,13 @@ class SquigglyAnnotation(Annotation):
     def __init__(
         self,
         bounding_box: Rectangle,
-        stroke_width: Decimal = Decimal(1),
         stroke_color: Color = HexColor("ff0000"),
+        stroke_width: Decimal = Decimal(1),
     ):
         super(SquigglyAnnotation, self).__init__(bounding_box)
 
         # (Required) The type of annotation that this dictionary describes; shall
-        # be Redact for a redaction annotation.
+        # be Squiggly for a squiggly annotation.
         self[Name("Subtype")] = Name("Squiggly")
 
         # (Optional; PDF 1.2) An appearance dictionary specifying how the
@@ -50,10 +55,10 @@ class SquigglyAnnotation(Annotation):
         self["AP"]["N"][Name("Subtype")] = Name("Form")
 
         appearance_stream_content = "q %f %f %f RG %f w 0 0 m " % (
-            stroke_color.to_rgb().red,
-            stroke_color.to_rgb().green,
-            stroke_color.to_rgb().blue,
-            stroke_width,
+            float(stroke_color.to_rgb().red),
+            float(stroke_color.to_rgb().green),
+            float(stroke_color.to_rgb().blue),
+            float(stroke_width),
         )
         for x in range(0, int(bounding_box.width), 5):
             appearance_stream_content += "%f %f l %f %f l " % (x, 0, x + 2.5, 7)
@@ -74,7 +79,7 @@ class SquigglyAnnotation(Annotation):
         # The lower-left corner of the bounding box (BBox) is set to coordinates (0, 0) in the form coordinate system.
         # The box’s top and right coordinates are taken from the dimensions of the annotation rectangle (the Rect
         # entry in the widget annotation dictionary).
-        self["AP"]["N"][Name("BBox")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self["AP"]["N"][Name("BBox")] = List().set_is_inline(True)
         self["AP"]["N"]["BBox"].append(bDecimal(0))
         self["AP"]["N"]["BBox"].append(bDecimal(0))
         self["AP"]["N"]["BBox"].append(bDecimal(bounding_box.width))

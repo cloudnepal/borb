@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -6,10 +6,10 @@
     extract font-related information from a Document
 """
 import typing
-from typing import List
 
 from borb.pdf.canvas.event.begin_page_event import BeginPageEvent
-from borb.pdf.canvas.event.event_listener import Event, EventListener
+from borb.pdf.canvas.event.event_listener import Event
+from borb.pdf.canvas.event.event_listener import EventListener
 from borb.pdf.canvas.font.font import Font
 
 
@@ -32,7 +32,6 @@ class FontExtraction(EventListener):
     #
 
     def _begin_page(self, event: BeginPageEvent):
-
         # update page number
         self._current_page += 1
         self._fonts_per_page[self._current_page] = []
@@ -75,7 +74,7 @@ class FontExtraction(EventListener):
                     out[k].append(font_name)
         return out
 
-    def get_fonts(self) -> typing.Dict[int, List[Font]]:
+    def get_fonts(self) -> typing.Dict[int, typing.List[Font]]:
         """
         This function returns all fonts used on a given PDF
         """

@@ -28,8 +28,20 @@ class CloseSubpath(CanvasOperator):
     reached by the h operation.
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("h", 0)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -39,6 +51,10 @@ class CloseSubpath(CanvasOperator):
     ) -> None:
         """
         Invoke the h operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
 
         # get graphic state

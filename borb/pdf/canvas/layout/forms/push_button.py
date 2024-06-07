@@ -9,9 +9,15 @@ import zlib
 from decimal import Decimal
 
 from borb.io.read.pdf_object import PDFObject
+from borb.io.read.types import Boolean
 from borb.io.read.types import Decimal as bDecimal
-from borb.io.read.types import Dictionary, Name, List, String, Stream, Boolean
-from borb.pdf.canvas.color.color import HexColor, Color
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
+from borb.io.read.types import String
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.font.simple_font.font_type_1 import StandardType1Font
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.forms.form_field import FormField
@@ -36,6 +42,10 @@ class PushButton(FormField):
         border_bottom: bool = True,
         border_color: Color = HexColor("767676"),
         border_left: bool = True,
+        border_radius_bottom_left: Decimal = Decimal(0),
+        border_radius_bottom_right: Decimal = Decimal(0),
+        border_radius_top_left: Decimal = Decimal(0),
+        border_radius_top_right: Decimal = Decimal(0),
         border_right: bool = True,
         border_top: bool = True,
         border_width: Decimal = Decimal(1),
@@ -58,13 +68,15 @@ class PushButton(FormField):
             border_bottom=border_bottom,
             border_color=border_color,
             border_left=border_left,
-            border_radius_bottom_left=Decimal(0),
-            border_radius_bottom_right=Decimal(0),
-            border_radius_top_left=Decimal(0),
-            border_radius_top_right=Decimal(0),
+            border_radius_bottom_left=border_radius_bottom_left,
+            border_radius_bottom_right=border_radius_bottom_right,
+            border_radius_top_left=border_radius_top_left,
+            border_radius_top_right=border_radius_top_right,
             border_right=border_right,
             border_top=border_top,
             border_width=border_width,
+            font="Helvetica",
+            font_color=font_color,
             font_size=font_size,
             horizontal_alignment=horizontal_alignment,
             margin_bottom=margin_bottom,
@@ -80,7 +92,6 @@ class PushButton(FormField):
         assert len(text) > 0
         self._field_name: typing.Optional[str] = field_name
         self._text = text
-        self._font_color: Color = font_color
         self._widget_dictionary: typing.Optional[Dictionary] = None
 
     #
@@ -138,7 +149,7 @@ class PushButton(FormField):
         self._widget_dictionary[Name("AP")][Name("N")] = Stream()
         self._widget_dictionary[Name("AP")][Name("N")][Name("Type")] = Name("XObject")
         self._widget_dictionary[Name("AP")][Name("N")][Name("Subtype")] = Name("Form")
-        self._widget_dictionary[Name("AP")][Name("N")][Name("BBox")] = List().set_is_inline(True)   # type: ignore[attr-defined]
+        self._widget_dictionary[Name("AP")][Name("N")][Name("BBox")] = List().set_is_inline(True)
         for _ in range(0, 4):
             self._widget_dictionary[Name("AP")][Name("N")][Name("BBox")].append(bDecimal(0))
         self._widget_dictionary[Name("AP")][Name("N")][Name("DecodedBytes")] = b"/Tx BMC EMC"
@@ -146,7 +157,7 @@ class PushButton(FormField):
         self._widget_dictionary[Name("AP")][Name("N")][Name("Filter")] = Name("FlateDecode")
         self._widget_dictionary[Name("AP")][Name("N")][Name("Length")] = bDecimal(len(self._widget_dictionary[Name("AP")][Name("N")][Name("Bytes")]))
         self._widget_dictionary[Name("AP")][Name("N")][Name("Resources")] = Dictionary()
-        self._widget_dictionary[Name("AP")][Name("N")][Name("Resources")][Name("ProcSet")] = List().set_is_inline(True) # type: ignore [attr-defined]
+        self._widget_dictionary[Name("AP")][Name("N")][Name("Resources")][Name("ProcSet")] = List().set_is_inline(True)
         self._widget_dictionary[Name("AP")][Name("N")][Name("Resources")][Name("ProcSet")].append(Name("PDF"))
         self._widget_dictionary[Name("AP")][Name("N")][Name("Resources")][Name("ProcSet")].append(Name("Text"))
         self._widget_dictionary[Name("AP")][Name("N")][Name("Resources")][Name("Font")] = Dictionary()
@@ -165,12 +176,12 @@ class PushButton(FormField):
         self._widget_dictionary[Name("Ff")] = bDecimal(65536)
         self._widget_dictionary[Name("FT")] = Name("Btn")
         self._widget_dictionary[Name("MK")] = Dictionary()
-        self._widget_dictionary[Name("MK")][Name("BC")] = List().set_is_inline(True)    # type: ignore [attr-defined]
-        self._widget_dictionary[Name("MK")][Name("BG")] = List().set_is_inline(True)    # type: ignore [attr-defined]
+        self._widget_dictionary[Name("MK")][Name("BC")] = List().set_is_inline(True)
+        self._widget_dictionary[Name("MK")][Name("BG")] = List().set_is_inline(True)
         self._widget_dictionary[Name("MK")][Name("CA")] = String("")
         self._widget_dictionary[Name("P")] = catalog
         self._widget_dictionary[Name("Q")] = bDecimal(1)
-        self._widget_dictionary[Name("Rect")] = List().set_is_inline(True)              # type: ignore [attr-defined]
+        self._widget_dictionary[Name("Rect")] = List().set_is_inline(True)
         for _ in range(0, 4):
             self._widget_dictionary[Name("Rect")].append(bDecimal(0))
         self._widget_dictionary[Name("Subtype")] = Name("Widget")
@@ -192,7 +203,6 @@ class PushButton(FormField):
         catalog["AcroForm"]["Fields"].append(self._widget_dictionary)
 
     def _paint_content_box(self, page: "Page", available_space: Rectangle) -> None:
-
         # init self._widget_dictionary
         self._init_widget_dictionary(page)
 
@@ -292,14 +302,13 @@ class JavaScriptPushButton(PushButton):
     #
 
     def _init_widget_dictionary(self, page: Page) -> None:
-
         # call to super
         super(JavaScriptPushButton, self)._init_widget_dictionary(page)
 
         # build JavaScript stream object
         # fmt: off
         javascript_stream = Stream()
-        javascript_stream.set_is_unique(True)     # type: ignore [attr-defined]
+        javascript_stream.set_is_unique(True)
         javascript_stream[Name("Type")] = Name("JavaScript")
         javascript_stream[Name("DecodedBytes")] = bytes(self._javascript, "latin1")
         javascript_stream[Name("Bytes")] = zlib.compress(javascript_stream[Name("DecodedBytes")], 9)

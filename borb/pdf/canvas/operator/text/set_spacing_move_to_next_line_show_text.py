@@ -24,8 +24,20 @@ class SetSpacingMoveToNextLineShowText(CanvasOperator):
     string '
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__('"', 3)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -35,6 +47,10 @@ class SetSpacingMoveToNextLineShowText(CanvasOperator):
     ) -> None:
         """
         Invoke the " operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         set_word_spacing_op: typing.Optional[
             CanvasOperator

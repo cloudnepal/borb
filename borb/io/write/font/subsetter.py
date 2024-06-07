@@ -14,18 +14,21 @@ import zlib
 from fontTools.subset import Subsetter as fSubsetter  # type: ignore[import]
 from fontTools.ttLib import TTFont  # type: ignore[import]
 
-from borb.io.read.types import Decimal as bDecimal, Name
+# fmt: off
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Name
 from borb.io.write.font.character_set_listener import CharacterSetListener
 from borb.io.write.font.copy_command_operator import CopyCommandOperator
-from borb.io.write.font.subset_show_text_with_glyph_positioning import (
-    SubSetShowTextWithGlyphPositioning,
-)
-from borb.pdf.page.page import Page
+from borb.io.write.font.subset_show_text_with_glyph_positioning import SubSetShowTextWithGlyphPositioning
 from borb.pdf.canvas.canvas import Canvas
 from borb.pdf.canvas.canvas_stream_processor import CanvasStreamProcessor
 from borb.pdf.canvas.font.composite_font.font_type_0 import Type0Font
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.font.simple_font.true_type_font import TrueTypeFont
+from borb.pdf.page.page import Page
+
+
+# fmt: on
 
 
 class Subsetter:
@@ -54,7 +57,6 @@ class Subsetter:
     def _modify_page_content_stream(
         page: Page, old_fonts: typing.List[Font], new_fonts: typing.List[Font]
     ):
-
         # build CanvasStreamProcessor
         csp = CanvasStreamProcessor(page, Canvas(), [])
 
@@ -121,7 +123,6 @@ class Subsetter:
 
         subset_fonts: typing.List[Font] = []
         for old_font in fonts_to_be_subset:
-
             # get DecodedBytes
             font_file_bytes_001 = old_font["DescendantFonts"][0]["FontDescriptor"][
                 "FontFile2"

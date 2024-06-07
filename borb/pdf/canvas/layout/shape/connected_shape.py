@@ -8,12 +8,13 @@ It has convenience methods to calculate width and height, perform scaling, etc
 import math
 import typing
 from decimal import Decimal
-from math import sqrt
-from typing import Tuple
+import math
 
-from borb.pdf.canvas.color.color import Color, HexColor
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
-from borb.pdf.canvas.layout.layout_element import Alignment, LayoutElement
+from borb.pdf.canvas.layout.layout_element import Alignment
+from borb.pdf.canvas.layout.layout_element import LayoutElement
 from borb.pdf.page.page import Page
 
 
@@ -29,9 +30,7 @@ class ConnectedShape(LayoutElement):
 
     def __init__(
         self,
-        points: typing.List[Tuple[Decimal, Decimal]],
-        fill_color: typing.Optional[Color],
-        stroke_color: typing.Optional[Color],
+        points: typing.List[typing.Tuple[Decimal, Decimal]],
         auto_close_shape: bool = False,
         background_color: typing.Optional[Color] = None,
         border_bottom: bool = False,
@@ -44,6 +43,7 @@ class ConnectedShape(LayoutElement):
         border_right: bool = False,
         border_top: bool = False,
         border_width: Decimal = Decimal(1),
+        fill_color: typing.Optional[Color] = None,
         horizontal_alignment: Alignment = Alignment.LEFT,
         line_width: Decimal = Decimal(1),
         margin_bottom: typing.Optional[Decimal] = Decimal(0),
@@ -54,6 +54,7 @@ class ConnectedShape(LayoutElement):
         padding_left: Decimal = Decimal(0),
         padding_right: Decimal = Decimal(0),
         padding_top: Decimal = Decimal(0),
+        stroke_color: typing.Optional[Color] = None,
         vertical_alignment: Alignment = Alignment.TOP,
     ):
         super(ConnectedShape, self).__init__(
@@ -68,6 +69,8 @@ class ConnectedShape(LayoutElement):
             border_right=border_right,
             border_top=border_top,
             border_width=border_width,
+            font="Helvetica",
+            font_color=HexColor("#000000"),
             font_size=Decimal(12),
             horizontal_alignment=horizontal_alignment,
             margin_bottom=margin_bottom,
@@ -90,7 +93,7 @@ class ConnectedShape(LayoutElement):
         # close shape if desired (and needed)
         if (
             auto_close_shape
-            and sqrt(
+            and math.sqrt(
                 (points[0][0] - points[-1][0]) ** 2
                 + (points[0][1] - points[-1][1]) ** 2
             )
@@ -111,7 +114,6 @@ class ConnectedShape(LayoutElement):
         )
 
     def _paint_content_box(self, page: Page, available_space: Rectangle) -> None:
-
         # translate points to fit in box
         self.move_to(
             available_space.get_x(),
@@ -152,6 +154,7 @@ class ConnectedShape(LayoutElement):
     def get_height(self) -> Decimal:
         """
         This function returns the height of this Shape
+        :return:    the height
         """
         min_y = min([x[1] for x in self._points])
         max_y = max([x[1] for x in self._points])
@@ -160,6 +163,7 @@ class ConnectedShape(LayoutElement):
     def get_width(self) -> Decimal:
         """
         This function returns the width of this Shape
+        :return:    the width
         """
         min_x = min([x[0] for x in self._points])
         max_x = max([x[0] for x in self._points])
@@ -168,6 +172,9 @@ class ConnectedShape(LayoutElement):
     def move_to(self, lower_left_x: Decimal, lower_left_y: Decimal) -> "ConnectedShape":
         """
         This method translates this Shape so its lower left corner aligns with the given coordinates
+        :param lower_left_x:    the desired lower left x-coordinate
+        :param lower_left_y:    the desired lower left y-coordinate
+        :return:    self
         """
         min_x = min([x[0] for x in self._points])
         min_y = min([x[1] for x in self._points])
@@ -179,8 +186,8 @@ class ConnectedShape(LayoutElement):
     def rotate(self, angle_in_radians: float) -> "ConnectedShape":
         """
         This function rotates the Shape for a given angle
-        :param angle_in_radians:    the angle
-        :return:                    this Shape
+        :param angle_in_radians:    the angle in radians
+        :return:                    self
         """
         a: Decimal = Decimal(math.cos(angle_in_radians))
         b: Decimal = Decimal(-math.sin(angle_in_radians))
@@ -197,6 +204,10 @@ class ConnectedShape(LayoutElement):
     ) -> "ConnectedShape":
         """
         This method scales this Shape down to fit a given max. width / height
+        :param max_width:               the maximum width
+        :param max_height:              the maximum height
+        :param preserve_aspect_ratio:   True if the aspect ratio should be preserved, False otherwise
+        :return:                        self
         """
         w_scale = max_width / self.get_width()
         h_scale = max_height / self.get_height()
@@ -217,6 +228,10 @@ class ConnectedShape(LayoutElement):
     ) -> "ConnectedShape":
         """
         This method scales this Shape up to fit a given max. width / height
+        :param max_width:               the maximum width
+        :param max_height:              the maximum height
+        :param preserve_aspect_ratio:   True if the aspect ratio should be preserved, False otherwise
+        :return:                        self
         """
         w_scale = max_width / self.get_width()
         h_scale = max_height / self.get_height()

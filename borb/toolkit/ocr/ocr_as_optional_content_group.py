@@ -12,27 +12,28 @@ import datetime
 import typing
 import zlib
 from decimal import Decimal
-from pathlib import Path
+import pathlib
 
 # FIX: circular imports (2/2)
 from typing import TYPE_CHECKING
 
 from borb.datastructure.disjoint_set import disjointset
 from borb.io.read.types import Decimal as bDecimal
-from borb.io.read.types import Dictionary, List, Name, String
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import String
 from borb.pdf.canvas.event.event_listener import Event
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.text.chunk_of_text import ChunkOfText
 from borb.pdf.document.document import Document
 from borb.pdf.page.page import Page
-from borb.toolkit.ocr.ocr_image_render_event_listener import (
-    OCREvent,
-    OCRImageRenderEventListener,
-)
+from borb.toolkit.ocr.ocr_image_render_event_listener import OCREvent
+from borb.toolkit.ocr.ocr_image_render_event_listener import OCRImageRenderEventListener
 
 EndDocumentEvent = type(None)
 if TYPE_CHECKING:
-    from borb.io.read.reference.xref_transformer import EndDocumentEvent
+    pass
 
 
 class OCRAsOptionalContentGroup(OCRImageRenderEventListener):
@@ -46,7 +47,9 @@ class OCRAsOptionalContentGroup(OCRImageRenderEventListener):
     #
 
     def __init__(
-        self, tesseract_data_dir: Path, minimal_confidence: Decimal = Decimal(0.75)
+        self,
+        tesseract_data_dir: pathlib.Path,
+        minimal_confidence: Decimal = Decimal(0.75),
     ):
         super(OCRAsOptionalContentGroup, self).__init__(
             tesseract_data_dir, minimal_confidence
@@ -60,7 +63,6 @@ class OCRAsOptionalContentGroup(OCRImageRenderEventListener):
     def _add_ocr_optional_content_group(self, document: Document) -> None:
         # add OCProperties to Document (if needed)
         if "OCProperties" not in document["XRef"]["Trailer"]["Root"]:
-
             # The optional OCProperties entry in the document catalog (see 7.7.2, "Document Catalog") shall contain, when
             # present, the optional content properties dictionary, which contains a list of all the optional content groups in the
             # document, as well as information about the default and alternate configurations for optional content.

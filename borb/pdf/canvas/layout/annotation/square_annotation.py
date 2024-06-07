@@ -10,7 +10,9 @@ Table 168).
 import typing
 from decimal import Decimal
 
-from borb.io.read.types import Name, List, Decimal as bDecimal
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import List
+from borb.io.read.types import Name
 from borb.pdf.canvas.color.color import Color
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
@@ -32,10 +34,10 @@ class SquareAnnotation(Annotation):
         self,
         bounding_box: Rectangle,
         fill_color: typing.Optional[Color] = None,
-        stroke_color: typing.Optional[Color] = None,
         rectangle_difference: typing.Optional[
             typing.Tuple[Decimal, Decimal, Decimal, Decimal]
         ] = None,
+        stroke_color: typing.Optional[Color] = None,
     ):
         super(SquareAnnotation, self).__init__(
             bounding_box=bounding_box, color=stroke_color
@@ -58,7 +60,7 @@ class SquareAnnotation(Annotation):
         # rectangle or ellipse. The number of array elements determines the colour
         # space in which the colour shall be defined
         if fill_color is not None:
-            self[Name("IC")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+            self[Name("IC")] = List().set_is_inline(True)
             self["IC"].append(bDecimal(fill_color.to_rgb().red))
             self["IC"].append(bDecimal(fill_color.to_rgb().green))
             self["IC"].append(bDecimal(fill_color.to_rgb().blue))
@@ -80,7 +82,7 @@ class SquareAnnotation(Annotation):
         # less than the height of Rect, and the sum of the left and right differences
         # shall be less than the width of Rect.
         if rectangle_difference is not None:
-            self[Name("RD")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+            self[Name("RD")] = List().set_is_inline(True)
             self["RD"].append(bDecimal(rectangle_difference[0]))
             self["RD"].append(bDecimal(rectangle_difference[1]))
             self["RD"].append(bDecimal(rectangle_difference[2]))

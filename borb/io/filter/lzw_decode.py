@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Decompresses data encoded using the LZW (Lempel-Ziv-Welch)
-adaptive compression method, reproducing the original
-text or binary data.
+Decompresses data encoded using the LZW (Lempel-Ziv-Welch) adaptive compression method,
+reproducing the original text or binary data.
 """
 import typing
 
@@ -20,10 +19,10 @@ class bitarray:
     #
 
     def __init__(self, input: bytes):
-        self._src: bytes = input
-        self._pos: int = -1
         self._buffer: typing.List[int] = []
         self._default_to_return: int = 256
+        self._pos: int = -1
+        self._src: bytes = input
 
     #
     # PRIVATE
@@ -55,9 +54,8 @@ class bitarray:
 
 class LZWDecode:
     """
-    Decompresses data encoded using the LZW (Lempel-Ziv-
-    Welch) adaptive compression method, reproducing the original
-    text or binary data.
+    Decompresses data encoded using the LZW (Lempel-Ziv-Welch) adaptive compression method,
+    reproducing the original text or binary data.
     """
 
     #
@@ -65,15 +63,15 @@ class LZWDecode:
     #
 
     def __init__(self):
+        self._bits_to_read: int = 9
         self._lookup_table: typing.Dict[int, bytearray] = {}
         self._table_index: int = 0
-        self._bits_to_read: int = 9
 
     #
     # PRIVATE
     #
 
-    def _add_to_lookup_table(self, prev_bytes: bytearray, new_bytes: bytes):
+    def _add_to_lookup_table(self, new_bytes: bytes, prev_bytes: bytearray):
         self._lookup_table[self._table_index] = prev_bytes + new_bytes
         self._table_index += 1
         if self._table_index == 511:
@@ -94,8 +92,9 @@ class LZWDecode:
 
     def decode(self, input: bytes):
         """
-        Decompresses data encoded using the LZW (Lempel-Ziv-Welch)
-        adaptive compression method
+        Decompresses data encoded using the LZW (Lempel-Ziv-Welch) adaptive compression method
+        :param input:   the input bytes
+        :return:        the output bytes
         """
 
         # output
@@ -126,13 +125,15 @@ class LZWDecode:
             if code < self._table_index:
                 x = self._lookup_table[code]
                 bytes_out += x
-                self._add_to_lookup_table(self._lookup_table[prev_code], x[0:1])
+                self._add_to_lookup_table(
+                    new_bytes=x[0:1], prev_bytes=self._lookup_table[prev_code]
+                )
                 prev_code = code
             else:
                 x = self._lookup_table[prev_code]
                 x = x + x[0:1]
                 bytes_out += x
-                self._add_to_lookup_table(x, bytearray())
+                self._add_to_lookup_table(new_bytes=bytearray(), prev_bytes=x)
                 prev_code = code
 
         # return bytes

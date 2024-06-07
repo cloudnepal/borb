@@ -5,10 +5,14 @@
 This implementation of WriteBaseTransformer is responsible for writing XREF objects
 """
 import typing
-from typing import Optional
 
-from borb.io.read.types import AnyPDFType, Decimal, Dictionary, Name, Reference
-from borb.io.write.transformer import Transformer, WriteTransformerState
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Name
+from borb.io.read.types import Reference
+from borb.io.write.transformer import Transformer
+from borb.io.write.transformer import WriteTransformerState
 from borb.pdf.xref.xref import XREF
 
 
@@ -25,7 +29,7 @@ class XREFTransformer(Transformer):
     # PRIVATE
     #
 
-    def _section_xref(self, context: Optional[WriteTransformerState] = None):
+    def _section_xref(self, context: typing.Optional[WriteTransformerState] = None):
         assert (
             context is not None
         ), "A WriteTransformerState must be defined in order to write XREF objects."
@@ -74,19 +78,24 @@ class XREFTransformer(Transformer):
     # PUBLIC
     #
 
-    def can_be_transformed(self, any: AnyPDFType):
+    def can_be_transformed(self, object: AnyPDFType):
         """
-        This function returns True if the object to be converted represents a cross-reference table
+        This function returns True if the object to be transformed is an XREF table
+        :param object:  the object to be transformed
+        :return:        True if the object is an XREF table, False otherwise
         """
-        return isinstance(any, XREF)
+        return isinstance(object, XREF)
 
     def transform(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState] = None,
+        context: typing.Optional[WriteTransformerState] = None,
     ):
         """
-        This method writes an XREF to a byte stream
+        This function transforms an XREF Object into a byte stream
+        :param object_to_transform:     the XREF Object to transform
+        :param context:                 the WriteTransformerState (containing passwords, etc)
+        :return:                        a (serialized) XREF Object
         """
         assert isinstance(object_to_transform, XREF)
         assert "Trailer" in object_to_transform
@@ -117,7 +126,7 @@ class XREFTransformer(Transformer):
         if ("Trailer" in object_to_transform and "Size" in object_to_transform["Trailer"]):
             trailer_out[Name("Size")] = object_to_transform["Trailer"]["Size"]
         else:
-            trailer_out[Name("Size")] = Decimal(0)  # we'll recalculate this later anyway
+            trailer_out[Name("Size")] = bDecimal(0)  # we'll recalculate this later anyway
         # fmt: on
 
         # /ID
@@ -156,7 +165,7 @@ class XREFTransformer(Transformer):
                     )
 
         # update /Size
-        trailer_out[Name("Size")] = Decimal(
+        trailer_out[Name("Size")] = bDecimal(
             sum([len(v) for k, v in context.indirect_objects_by_hash.items()]) + 1
         )
 

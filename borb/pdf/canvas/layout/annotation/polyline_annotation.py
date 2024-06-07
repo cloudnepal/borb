@@ -10,8 +10,11 @@ import enum
 import typing
 from decimal import Decimal
 
-from borb.io.read.types import Name, List, Decimal as bDecimal
-from borb.pdf.canvas.color.color import HexColor, Color
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
 
@@ -21,16 +24,16 @@ class LineEndStyleType(enum.Enum):
     This Enum represents all possible line end styles
     """
 
-    SQUARE = Name("Square")
-    CIRCLE = Name("Circle")
-    DIAMOND = Name("Diamond")
-    OPEN_ARROW = Name("OpenArrow")
-    CLOSED_ARROW = Name("ClosedArrow")
-    NONE = Name("None")
     BUTT = Name("Butt")
-    RIGHT_OPEN_ARROW = Name("ROpenArrow")
+    CIRCLE = Name("Circle")
+    CLOSED_ARROW = Name("ClosedArrow")
+    DIAMOND = Name("Diamond")
+    NONE = Name("None")
+    OPEN_ARROW = Name("OpenArrow")
     RIGHT_CLOSED_ARROW = Name("RClosedArrow")
+    RIGHT_OPEN_ARROW = Name("ROpenArrow")
     SLASH = Name("Slash")
+    SQUARE = Name("Square")
 
 
 class PolylineAnnotation(Annotation):
@@ -47,12 +50,11 @@ class PolylineAnnotation(Annotation):
     def __init__(
         self,
         points: typing.List[typing.Tuple[Decimal, Decimal]],
-        stroke_color: typing.Optional[Color] = HexColor("000000"),
         fill_color: typing.Optional[Color] = None,
         left_line_end_style: LineEndStyleType = LineEndStyleType.NONE,
         right_line_end_style: LineEndStyleType = LineEndStyleType.NONE,
+        stroke_color: typing.Optional[Color] = HexColor("000000"),
     ):
-
         # must be at least 3 points
         assert len(points) >= 3
 
@@ -80,7 +82,7 @@ class PolylineAnnotation(Annotation):
         # (Required) An array of numbers (see Table 174) specifying the width and
         # dash pattern that shall represent the alternating horizontal and vertical
         # coordinates, respectively, of each vertex, in default user space.
-        self[Name("Vertices")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self[Name("Vertices")] = List().set_is_inline(True)
         for p in points:
             self["Vertices"].append(bDecimal(p[0]))
             self["Vertices"].append(bDecimal(p[1]))
@@ -91,12 +93,12 @@ class PolylineAnnotation(Annotation):
         # defined, respectively, by the first and second pairs of coordinates, (x 1 , y 1 )
         # and (x 2 , y 2 ), in the L array. Table 176 shows the possible values. Default
         # value: [ /None /None ].
-        self[Name("LE")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self[Name("LE")] = List().set_is_inline(True)
         self["LE"].append(left_line_end_style)
         self["LE"].append(right_line_end_style)
 
         if fill_color is not None:
-            self[Name("IC")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+            self[Name("IC")] = List().set_is_inline(True)
             self["IC"].append(bDecimal(fill_color.to_rgb().red))
             self["IC"].append(bDecimal(fill_color.to_rgb().green))
             self["IC"].append(bDecimal(fill_color.to_rgb().blue))

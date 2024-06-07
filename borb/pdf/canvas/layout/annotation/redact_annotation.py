@@ -22,15 +22,13 @@ import typing
 import zlib
 from decimal import Decimal
 
-from borb.io.read.types import (
-    Name,
-    List,
-    Decimal as bDecimal,
-    String,
-    Boolean,
-    Dictionary,
-    Stream,
-)
+from borb.io.read.types import Boolean
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
+from borb.io.read.types import String
 from borb.pdf.canvas.color.color import Color
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
@@ -63,10 +61,10 @@ class RedactAnnotation(Annotation):
         self,
         bounding_box: Rectangle,
         fill_color: typing.Optional[Color] = None,
-        stroke_color: typing.Optional[Color] = None,
-        stroke_width: Decimal = Decimal(1),
         overlay_text: typing.Optional[str] = None,
         repeat_overlay_text: typing.Optional[bool] = None,
+        stroke_color: typing.Optional[Color] = None,
+        stroke_width: Decimal = Decimal(1),
     ):
         super(RedactAnnotation, self).__init__(bounding_box=bounding_box)
 
@@ -81,7 +79,7 @@ class RedactAnnotation(Annotation):
         # redaction region is left transparent. This entry is ignored if the RO
         # entry is present.
         if fill_color is not None:
-            self[Name("IC")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+            self[Name("IC")] = List().set_is_inline(True)
             self["IC"].append(bDecimal(fill_color.to_rgb().red))
             self["IC"].append(bDecimal(fill_color.to_rgb().green))
             self["IC"].append(bDecimal(fill_color.to_rgb().blue))
@@ -140,7 +138,7 @@ class RedactAnnotation(Annotation):
         # The lower-left corner of the bounding box (BBox) is set to coordinates (0, 0) in the form coordinate system.
         # The box’s top and right coordinates are taken from the dimensions of the annotation rectangle (the Rect
         # entry in the widget annotation dictionary).
-        self["AP"]["N"][Name("BBox")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self["AP"]["N"][Name("BBox")] = List().set_is_inline(True)
         self["AP"]["N"]["BBox"].append(bDecimal(0))
         self["AP"]["N"]["BBox"].append(bDecimal(0))
         self["AP"]["N"]["BBox"].append(bDecimal(100))

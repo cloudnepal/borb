@@ -6,14 +6,16 @@ This implementation of WriteBaseTransformer is responsible
 for writing Dictionary objects of /Type /Page
 """
 import logging
-from typing import Optional
+import typing
 
-from borb.io.read.types import AnyPDFType, Dictionary, Name
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Name
 from borb.io.write.font.subsetter import Subsetter
 from borb.io.write.object.dictionary_transformer import DictionaryTransformer
 from borb.io.write.transformer import WriteTransformerState
-from borb.pdf import Page
 from borb.pdf.document.document import Document
+from borb.pdf.page.page import Page
 
 logger = logging.getLogger(__name__)
 
@@ -36,19 +38,28 @@ class PageTransformer(DictionaryTransformer):
     # PUBLIC
     #
 
-    def can_be_transformed(self, any: AnyPDFType):
+    def can_be_transformed(self, object: AnyPDFType):
         """
-        This function returns True if the object to be converted represents an /Page Dictionary
+        This function returns True if the object to be transformed is a /Page Dictionary
+        :param object:  the object to be transformed
+        :return:        True if the object is a /Page Dictionary, False otherwise
         """
-        return isinstance(any, Dictionary) and "Type" in any and any["Type"] == "Page"
+        return (
+            isinstance(object, Dictionary)
+            and "Type" in object
+            and object["Type"] == "Page"
+        )
 
     def transform(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState] = None,
+        context: typing.Optional[WriteTransformerState] = None,
     ):
         """
-        This method writes a /Page Dictionary to a byte stream
+        This function transforms a /Page Dictionary into a byte stream
+        :param object_to_transform:     the /Page Dictionary to transform
+        :param context:                 the WriteTransformerState (containing passwords, etc)
+        :return:                        a (serialized) /Page Dictionary
         """
         # fmt: off
         assert isinstance(object_to_transform, Dictionary)

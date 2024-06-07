@@ -34,8 +34,20 @@ class AppendRectangle(CanvasOperator):
     h
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
-        super().__init__("s", 0)
+        super().__init__("re", 4)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -45,6 +57,10 @@ class AppendRectangle(CanvasOperator):
     ) -> None:
         """
         Invoke the s operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         assert isinstance(operands[0], Decimal)
         assert isinstance(operands[1], Decimal)

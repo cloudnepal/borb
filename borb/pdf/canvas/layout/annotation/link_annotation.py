@@ -10,7 +10,10 @@ import enum
 import typing
 from decimal import Decimal
 
-from borb.io.read.types import Name, List, Decimal as bDecimal, String
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import String
 from borb.pdf.canvas.color.color import Color
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
@@ -46,14 +49,14 @@ class LinkAnnotation(Annotation):
         self,
         bounding_box: Rectangle,
         page: Decimal,
-        destination_type: DestinationType,
-        color: typing.Optional[Color] = None,
-        top: typing.Optional[Decimal] = None,
-        right: typing.Optional[Decimal] = None,
         bottom: typing.Optional[Decimal] = None,
-        left: typing.Optional[Decimal] = None,
-        zoom: typing.Optional[Decimal] = None,
+        color: typing.Optional[Color] = None,
+        destination_type: DestinationType = DestinationType.FIT,
         highlighting_mode: typing.Optional[str] = None,
+        left: typing.Optional[Decimal] = None,
+        right: typing.Optional[Decimal] = None,
+        top: typing.Optional[Decimal] = None,
+        zoom: typing.Optional[Decimal] = None,
     ):
         super(LinkAnnotation, self).__init__(bounding_box=bounding_box, color=color)
 
@@ -68,7 +71,7 @@ class LinkAnnotation(Annotation):
         # be displayed when the annotation is activated (see 12.3.2,
         # “Destinations”).
         destination = List()
-        destination.set_is_inline(True)  # type: ignore [attr-defined]
+        destination.set_is_inline(True)
         destination.append(bDecimal(page))
         destination.append(destination_type.value)
         if destination_type == DestinationType.X_Y_Z:

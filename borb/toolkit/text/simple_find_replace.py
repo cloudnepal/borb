@@ -9,15 +9,15 @@ RedactAnnotation to remove the text, and Paragraph to re-insert replacement text
 import typing
 from decimal import Decimal
 
-from borb.pdf.document.document import Document
-from borb.pdf.canvas.layout.text.paragraph import Paragraph
-from borb.pdf.canvas.layout.layout_element import Alignment
-from borb.pdf.page.page import Page
 from borb.pdf.canvas.color.color import Color
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.font.simple_font.font_type_1 import StandardType1Font
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.redact_annotation import RedactAnnotation
+from borb.pdf.canvas.layout.layout_element import Alignment
+from borb.pdf.canvas.layout.text.paragraph import Paragraph
+from borb.pdf.document.document import Document
+from borb.pdf.page.page import Page
 
 
 class SimpleFindReplace:
@@ -26,6 +26,18 @@ class SimpleFindReplace:
     This class uses RegularExpressionTextExtraction to find the text,
     RedactAnnotation to remove the text, and Paragraph to re-insert replacement text.
     """
+
+    #
+    # CONSTRUCTOR
+    #
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     @staticmethod
     def sub(
@@ -63,7 +75,6 @@ class SimpleFindReplace:
         else:
             page_range = [x for x in page_range if x >= 0 and x < number_of_pages]
         for page_nr in page_range:
-
             # insert redaction annotations
             page: Page = doc.get_page(page_nr)
             for pdf_match in matches_per_page[page_nr]:
@@ -81,7 +92,6 @@ class SimpleFindReplace:
 
             # insert new text (helvetica)
             for pdf_match in matches_per_page[page_nr]:
-
                 # bounding box
                 # fmt: off
                 bb_x: Decimal = pdf_match.get_bounding_boxes()[0].get_x()
@@ -106,7 +116,15 @@ class SimpleFindReplace:
                         font_size=repl_font_size,
                         font_color=repl_font_color,
                         horizontal_alignment=repl_font_horizontal_alignment,
-                    ).paint(page, Rectangle(bb_x, bb_y + Decimal(1), bb_w, bb_h))
+                    ).paint(
+                        page,
+                        Rectangle(
+                            bb_x - Decimal(0.5),
+                            bb_y - Decimal(0.5),
+                            bb_w + Decimal(1),
+                            bb_h + Decimal(1),
+                        ),
+                    )
 
         # return
         return doc

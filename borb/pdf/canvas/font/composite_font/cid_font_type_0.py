@@ -16,7 +16,8 @@
 import typing
 
 from borb.io.read.types import Decimal as bDecimal
-from borb.io.read.types import List, Name
+from borb.io.read.types import List
+from borb.io.read.types import Name
 from borb.pdf.canvas.font.font import Font
 
 
@@ -56,6 +57,7 @@ class CIDType0Font(Font):
         """
         This function returns the maximum height above the baseline reached by glyphs in this font.
         The height of glyphs for accented characters shall be excluded.
+        :return:    the ascent
         """
         assert "FontDescriptor" in self
         assert "Ascent" in self["FontDescriptor"]
@@ -65,6 +67,7 @@ class CIDType0Font(Font):
         """
         This function returns the maximum depth below the baseline reached by glyphs in this font.
         The value shall be a negative number.
+        :return:    the descent
         """
         assert "FontDescriptor" in self
         assert "Descent" in self["FontDescriptor"]
@@ -75,6 +78,8 @@ class CIDType0Font(Font):
         This function returns the width (in text space) of a given character identifier.
         If this Font is unable to represent the glyph that corresponds to the character identifier,
         this function returns None
+        :param character_identifier:    the character_identifier
+        :return:                        the width (in text space) of the character identifier
         """
 
         # check cache

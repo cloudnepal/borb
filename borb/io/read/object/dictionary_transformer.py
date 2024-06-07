@@ -6,10 +6,11 @@ This implementation of ReadBaseTransformer is responsible for reading a Dictiona
 """
 import io
 import typing
-from typing import Any, Optional, Union
 
-from borb.io.read.transformer import ReadTransformerState, Transformer
-from borb.io.read.types import AnyPDFType, Dictionary
+from borb.io.read.transformer import ReadTransformerState
+from borb.io.read.transformer import Transformer
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Dictionary
 from borb.pdf.canvas.event.event_listener import EventListener
 
 
@@ -31,22 +32,30 @@ class DictionaryTransformer(Transformer):
     #
 
     def can_be_transformed(
-        self, object: Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType]
+        self,
+        object: typing.Union[io.BufferedIOBase, io.RawIOBase, io.BytesIO, AnyPDFType],
     ) -> bool:
         """
-        This function returns True if the object to be transformed is a Dictionary object
+        This function returns True if the object to be transformed is a Dictionary
+        :param object:  the object to be transformed
+        :return:        True if the object is a Dictionary, False otherwise
         """
         return isinstance(object, Dictionary)
 
     def transform(
         self,
-        object_to_transform: Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
-        parent_object: Any,
-        context: Optional[ReadTransformerState] = None,
+        object_to_transform: typing.Union[io.BufferedIOBase, io.RawIOBase, AnyPDFType],
+        parent_object: typing.Any,
+        context: typing.Optional[ReadTransformerState] = None,
         event_listeners: typing.List[EventListener] = [],
-    ) -> Any:
+    ) -> typing.Any:
         """
-        This function reads a Dictionary from a byte stream
+        This function transforms a PDF Dictionary into a Python Dictionary
+        :param object_to_transform:     the Dictionary to transform
+        :param parent_object:           the parent Object
+        :param context:                 the ReadTransformerState (containing passwords, etc)
+        :param event_listeners:         the EventListener objects that may need to be notified
+        :return:                        a Dictionary Object
         """
 
         # create root object

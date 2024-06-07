@@ -5,19 +5,17 @@
 This implementation of WriteBaseTransformer is responsible for writing /Catalog Dictionary objects
 """
 import logging
+import typing
 import zlib
-from pathlib import Path
-from typing import Optional
+import pathlib
 
-from borb.io.read.types import (
-    AnyPDFType,
-    Dictionary,
-    Name,
-    String,
-    List as bList,
-    Stream,
-    Decimal as bDecimal,
-)
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List as bList
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
+from borb.io.read.types import String
 from borb.io.write.object.dictionary_transformer import DictionaryTransformer
 from borb.io.write.transformer import WriteTransformerState
 from borb.pdf.document.document import Document
@@ -39,12 +37,13 @@ class CatalogTransformer(DictionaryTransformer):
     #
 
     def _build_rgb_outputintent_dictionary(self, root_dictionary: Dictionary) -> None:
-
         # TODO check if exists already
 
         # read color profile bytes
         color_profile_bytes: bytes = b""
-        with open(Path(__file__).parent / "resources/sRGB_CS_profile.icm", "rb") as fh:
+        with open(
+            pathlib.Path(__file__).parent / "resources/sRGB_CS_profile.icm", "rb"
+        ) as fh:
             color_profile_bytes = fh.read()
 
         # create dest_output_profile
@@ -80,21 +79,28 @@ class CatalogTransformer(DictionaryTransformer):
     # PUBLIC
     #
 
-    def can_be_transformed(self, any: AnyPDFType):
+    def can_be_transformed(self, object: AnyPDFType):
         """
         This function returns True if the object to be transformed is a /Catalog Dictionary
+        :param object:  the object to be transformed
+        :return:        True if the object is a /Catalog Dictionary, False otherwise
         """
         return (
-            isinstance(any, Dictionary) and "Type" in any and any["Type"] == "Catalog"
+            isinstance(object, Dictionary)
+            and "Type" in object
+            and object["Type"] == "Catalog"
         )
 
     def transform(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState] = None,
+        context: typing.Optional[WriteTransformerState] = None,
     ):
         """
-        This method writes a /Catalog Dictionary to a byte stream
+        This function transforms a /Catalog Dictionary into a byte stream
+        :param object_to_transform:     the /Catalog Dictionary to transform
+        :param context:                 the WriteTransformerState (containing passwords, etc)
+        :return:                        a (serialized) /Catalog Dictionary
         """
 
         assert isinstance(object_to_transform, Dictionary)

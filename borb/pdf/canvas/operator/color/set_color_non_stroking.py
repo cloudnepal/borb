@@ -6,10 +6,12 @@
 """
 import typing
 from decimal import Decimal
-from typing import List
 
 from borb.io.read.types import AnyPDFType
-from borb.pdf.canvas.color.color import CMYKColor, GrayColor, RGBColor, Separation
+from borb.pdf.canvas.color.color import CMYKColor
+from borb.pdf.canvas.color.color import GrayColor
+from borb.pdf.canvas.color.color import RGBColor
+from borb.pdf.canvas.color.color import Separation
 from borb.pdf.canvas.operator.canvas_operator import CanvasOperator
 
 
@@ -18,9 +20,21 @@ class SetColorNonStroking(CanvasOperator):
     (PDF 1.2) Same as SCN but used for nonstroking operations.
     """
 
-    def __init__(self, canvas_stream_processor: "CanvasStreamProcessor"):  # type: ignore [name-defined]
+    #
+    # CONSTRUCTOR
+    #
+
+    def __init__(self, canvas_stream_processor: "CanvasStreamProcessor"):
         super().__init__("scn", 0)
         self._canvas = canvas_stream_processor.get_canvas()
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def get_number_of_operands(self) -> int:
         """
@@ -36,7 +50,7 @@ class SetColorNonStroking(CanvasOperator):
             return 3
         # separation
         if (
-            isinstance(non_stroke_color_space, List)
+            isinstance(non_stroke_color_space, typing.List)
             and len(non_stroke_color_space) == 4
             and non_stroke_color_space[0] == "Separation"
         ):
@@ -51,6 +65,10 @@ class SetColorNonStroking(CanvasOperator):
     ) -> None:
         """
         Invoke the scn operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         canvas = canvas_stream_processor.get_canvas()
         non_stroke_color_space = canvas.graphics_state.non_stroke_color_space
@@ -91,7 +109,7 @@ class SetColorNonStroking(CanvasOperator):
 
         # separation
         if (
-            isinstance(non_stroke_color_space, List)
+            isinstance(non_stroke_color_space, typing.List)
             and non_stroke_color_space[0] == "Separation"
         ):
             # fmt: off

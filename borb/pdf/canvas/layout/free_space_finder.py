@@ -6,12 +6,13 @@ This implementation of EventListener keeps track of which space on a Page is ava
 """
 import typing
 from decimal import Decimal
-from math import ceil
-from pathlib import Path
+import math
+import pathlib
 
 from borb.pdf.canvas.event.begin_page_event import BeginPageEvent
 from borb.pdf.canvas.event.chunk_of_text_render_event import ChunkOfTextRenderEvent
-from borb.pdf.canvas.event.event_listener import Event, EventListener
+from borb.pdf.canvas.event.event_listener import Event
+from borb.pdf.canvas.event.event_listener import EventListener
 from borb.pdf.canvas.event.image_render_event import ImageRenderEvent
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.pdf import PDF
@@ -26,7 +27,7 @@ class FreeSpaceFinder(EventListener):
         """
         This class represents a rasterized, low-res view of a Page.
         But rather than rendering instructions on this raster, each cell simply keeps track
-        of whether or not the cell is available. This enables a quick lookup for availability of a given Rectangle.
+        of whether the cell is available. This enables a quick lookup for availability of a given Rectangle.
         """
 
         def __init__(
@@ -36,11 +37,11 @@ class FreeSpaceFinder(EventListener):
             self._page_height = page_height
             self._resolution = resolution
             self._availability: typing.List[typing.List[bool]] = [
-                [True for _ in range(0, ceil(self._page_width / self._resolution))]
-                for _ in range(0, ceil(self._page_height / self._resolution))
+                [True for _ in range(0, math.ceil(self._page_width / self._resolution))]
+                for _ in range(0, math.ceil(self._page_height / self._resolution))
             ]
 
-        def _get_free_space(
+        def get_free_space(
             self, desired_rectangle: Rectangle
         ) -> typing.Optional[Rectangle]:
             """
@@ -90,7 +91,12 @@ class FreeSpaceFinder(EventListener):
                 desired_rectangle.height,
             )
 
-        def _mark_as_unavailable(self, rectangle: Rectangle) -> "FreeSpaceFinder.Grid":
+        def mark_as_unavailable(self, rectangle: Rectangle) -> "FreeSpaceFinder.Grid":
+            """
+            This method marks a given area in this Grid as unavailable for future content
+            :param rectangle:   the Rectangle to be marked
+            :return:            self
+            """
             x_grid = int(int(rectangle.x) / self._resolution)
             y_grid = int(int(rectangle.y) / self._resolution)
             w = int(int(rectangle.width) / self._resolution)
@@ -117,7 +123,6 @@ class FreeSpaceFinder(EventListener):
     #
 
     def _event_occurred(self, event: Event) -> None:
-
         # BeginPageEvent
         if isinstance(event, BeginPageEvent):
             self._page_number += 1
@@ -134,9 +139,9 @@ class FreeSpaceFinder(EventListener):
                 Rectangle
             ] = event.get_previous_layout_box()
             if bounding_box_001 is not None:
-                self._grid_per_page[self._page_number]._mark_as_unavailable(
-                    bounding_box_001
-                )
+                # fmt: off
+                self._grid_per_page[self._page_number].mark_as_unavailable(bounding_box_001)
+                # fmt: on
 
         # ImageRenderEvent
         if isinstance(event, ImageRenderEvent):
@@ -145,9 +150,9 @@ class FreeSpaceFinder(EventListener):
                 event.get_x(), event.get_y(), event.get_width(), event.get_height()
             )
             if bounding_box_002 is not None:
-                self._grid_per_page[self._page_number]._mark_as_unavailable(
-                    bounding_box_002
-                )
+                # fmt: off
+                self._grid_per_page[self._page_number].mark_as_unavailable(bounding_box_002)
+                # fmt: on
 
     #
     # PUBLIC
@@ -155,17 +160,17 @@ class FreeSpaceFinder(EventListener):
 
     @staticmethod
     def find_free_space_for_page(
-        file: Path, page_number: int, desired_rectangle: Rectangle
+        file: pathlib.Path, page_number: int, desired_rectangle: Rectangle
     ) -> typing.Optional[Rectangle]:
         """
-        This function returns the nearest (euclidean distance)
+        This function returns the nearest (Euclidean distance)
         empty Rectangle that is at least as wide and tall as the
         desired Rectangle.
         If no such Rectangle exists, this method returns None.
         """
         l: FreeSpaceFinder = FreeSpaceFinder()
         with open(file, "rb") as pdf_file_handle:
-            PDF.loads(pdf_file_handle, [l])  # type: ignore [arg-type]
+            PDF.loads(pdf_file_handle, [l])  # type: ignore[arg-type]
         return l.get_free_space_for_page(page_number, desired_rectangle)
 
     def get_free_space_for_page(
@@ -178,5 +183,5 @@ class FreeSpaceFinder(EventListener):
         If no such Rectangle exists, this method returns None.
         """
         if page_number in self._grid_per_page:
-            return self._grid_per_page[page_number]._get_free_space(desired_rectangle)
+            return self._grid_per_page[page_number].get_free_space(desired_rectangle)
         return None

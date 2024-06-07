@@ -7,7 +7,9 @@ This implementation of LayoutElement represents an horizontal line across the pa
 import typing
 from decimal import Decimal
 
-from borb.pdf.canvas.color.color import Color, HexColor, RGBColor
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
+from borb.pdf.canvas.color.color import RGBColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.layout_element import LayoutElement
 from borb.pdf.page.page import Page
@@ -51,7 +53,6 @@ class HorizontalRule(LayoutElement):
         )
 
     def _paint_content_box(self, page: Page, available_space: Rectangle) -> None:
-
         # write l operator
         rgb_color: RGBColor = self._line_color.to_rgb()
         content = " q %f %f %f RG %f %f m %f %f l s Q " % (

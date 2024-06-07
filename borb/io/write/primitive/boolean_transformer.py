@@ -4,10 +4,12 @@
 """
 This implementation of WriteBaseTransformer is responsible for writing booleans
 """
-from typing import Optional
+import typing
 
-from borb.io.read.types import AnyPDFType, Boolean
-from borb.io.write.transformer import Transformer, WriteTransformerState
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Boolean
+from borb.io.write.transformer import Transformer
+from borb.io.write.transformer import WriteTransformerState
 
 
 class BooleanTransformer(Transformer):
@@ -27,19 +29,24 @@ class BooleanTransformer(Transformer):
     # PUBLIC
     #
 
-    def can_be_transformed(self, any: AnyPDFType):
+    def can_be_transformed(self, object: AnyPDFType):
         """
-        This function returns True if the object to be converted represents a Boolean object
+        This function returns True if the object to be transformed is a Boolean
+        :param object:  the object to be transformed
+        :return:        True if the object is a Boolean, False otherwise
         """
-        return isinstance(any, Boolean)
+        return isinstance(object, Boolean)
 
     def transform(
         self,
         object_to_transform: AnyPDFType,
-        context: Optional[WriteTransformerState] = None,
+        context: typing.Optional[WriteTransformerState] = None,
     ):
         """
-        This method writes a Boolean to a byte stream
+        This function transforms a Boolean Object into a byte stream
+        :param object_to_transform:     the Boolean Object to transform
+        :param context:                 the WriteTransformerState (containing passwords, etc)
+        :return:                        a (serialized) Boolean Object
         """
         # fmt: off
         assert context is not None, "context must be defined to write bool objects"

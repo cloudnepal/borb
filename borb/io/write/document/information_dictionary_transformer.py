@@ -8,16 +8,19 @@ import datetime
 import logging
 import random
 import typing
-import xml.etree.ElementTree as ET
-from typing import Any, Optional
+import xml.etree.ElementTree
 
 from borb.io.read.types import AnyPDFType
 from borb.io.read.types import Decimal as bDecimal
-from borb.io.read.types import Dictionary, Name, Stream, String
+from borb.io.read.types import Dictionary
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
+from borb.io.read.types import String
 from borb.io.write.conformance_level import ConformanceLevel
 from borb.io.write.object.dictionary_transformer import DictionaryTransformer
 from borb.io.write.object.stream_transformer import StreamTransformer
-from borb.io.write.transformer import Transformer, WriteTransformerState
+from borb.io.write.transformer import Transformer
+from borb.io.write.transformer import WriteTransformerState
 from borb.license.version import Version
 from borb.pdf.document.document import Document
 from borb.pdf.trailer.document_info import XMPDocumentInfo
@@ -58,7 +61,10 @@ class InformationDictionaryTransformer(Transformer):
             and "Trailer" in document["XRef"]
             and "Root" in document["XRef"]["Trailer"]
             and "Metadata" in document["XRef"]["Trailer"]["Root"]
-            and isinstance(document["XRef"]["Trailer"]["Root"]["Metadata"], ET.Element)
+            and isinstance(
+                document["XRef"]["Trailer"]["Root"]["Metadata"],
+                xml.etree.ElementTree.Element,
+            )
         ):
             xmp_document_info: XMPDocumentInfo = document.get_xmp_document_info()
             for k, v in {
@@ -111,7 +117,6 @@ class InformationDictionaryTransformer(Transformer):
         return timestamp_str
 
     def _update_info_dictionary(self, info_dictionary: Dictionary) -> Dictionary:
-
         # set CreationDate
         # fmt: off
         if "CreationDate" not in info_dictionary:
@@ -240,26 +245,31 @@ class InformationDictionaryTransformer(Transformer):
     # PUBLIC
     #
 
-    def can_be_transformed(self, any: AnyPDFType):
+    def can_be_transformed(self, object: AnyPDFType):
         """
         This function returns True if the object to be transformed is an /Info Dictionary
+        :param object:  the object to be transformed
+        :return:        True if the object is an /Info Dictionary, False otherwise
         """
-        if not isinstance(any, Dictionary):
+        if not isinstance(object, Dictionary):
             return False
-        parent: typing.Any = any.get_parent()
+        parent: typing.Any = object.get_parent()
         return (
             isinstance(parent, Dictionary)
             and "Info" in parent
-            and parent["Info"] == any
+            and parent["Info"] == object
         )
 
     def transform(
         self,
-        object_to_transform: Any,
-        context: Optional[WriteTransformerState] = None,
+        object_to_transform: typing.Any,
+        context: typing.Optional[WriteTransformerState] = None,
     ):
         """
-        This method writes an /Info Dictionary to a byte stream
+        This function transforms an /Info Dictionary into a byte stream
+        :param object_to_transform:     the /Info Dictionary to transform
+        :param context:                 the WriteTransformerState (containing passwords, etc)
+        :return:                        a (serialized) /Info Dictionary
         """
 
         # get Document
@@ -285,7 +295,6 @@ class InformationDictionaryTransformer(Transformer):
         # fmt: on
 
         if needs_xmp_metadata:
-
             # write XMP /Metadata
             xmp_metadata_stream: Stream = self._write_xmp_metadata_stream(
                 new_info_dictionary,
@@ -295,7 +304,7 @@ class InformationDictionaryTransformer(Transformer):
             document["XRef"]["Trailer"]["Root"][Name("Metadata")] = self.get_reference(
                 xmp_metadata_stream, context
             )
-            xmp_metadata_stream.set_parent(document["XRef"]["Trailer"]["Root"])  # type: ignore [attr-defined]
+            xmp_metadata_stream.set_parent(document["XRef"]["Trailer"]["Root"])  # type: ignore[attr-defined]
 
             # delegate XMP /Metadata
             for h in self.get_root_transformer()._handlers:

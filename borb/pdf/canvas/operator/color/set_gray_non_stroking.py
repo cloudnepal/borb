@@ -17,8 +17,20 @@ class SetGrayNonStroking(CanvasOperator):
     Same as G but used for nonstroking operations.
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("g", 1)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -28,6 +40,10 @@ class SetGrayNonStroking(CanvasOperator):
     ) -> None:
         """
         Invoke the g operator
+        :param canvas_stream_processor:     the CanvasStreamProcessor
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         assert isinstance(operands[0], Decimal), "Operand 0 of g must be a Decimal"
         canvas = canvas_stream_processor.get_canvas()

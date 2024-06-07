@@ -27,8 +27,20 @@ class SetCMYKStroking(CanvasOperator):
     Control").
     """
 
+    #
+    # CONSTRUCTOR
+    #
+
     def __init__(self):
         super().__init__("K", 4)
+
+    #
+    # PRIVATE
+    #
+
+    #
+    # PUBLIC
+    #
 
     def invoke(
         self,
@@ -38,6 +50,9 @@ class SetCMYKStroking(CanvasOperator):
     ) -> None:
         """
         Invoke the K operator
+        :param operands:                    the operands for this CanvasOperator
+        :param event_listeners:             the typing.List of EventListener(s) that may be notified
+        :return:                            None
         """
         # fmt: off
         assert isinstance(operands[0], Decimal), "operand 0 of K operator must be of type Decimal"

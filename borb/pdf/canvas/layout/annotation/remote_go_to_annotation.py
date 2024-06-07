@@ -7,7 +7,11 @@ A link annotation represents either a hypertext link to a destination elsewhere 
 entries specific to this type of annotation.
 This method adds a link annotation with an action that opens a remote URI.
 """
-from borb.io.read.types import Name, String, Dictionary, List, Decimal as bDecimal
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import String
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
 
@@ -42,7 +46,7 @@ class RemoteGoToAnnotation(Annotation):
         # border. The dash array shall be specified in the same format as in the
         # line dash pattern parameter of the graphics state (see 8.4.3.6, “Line
         # Dash Pattern”).
-        self[Name("Border")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self[Name("Border")] = List().set_is_inline(True)
         for _ in range(0, 3):
             self[Name("Border")].append(bDecimal(0))
 

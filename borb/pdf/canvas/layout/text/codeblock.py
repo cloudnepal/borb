@@ -16,17 +16,11 @@ unless they are masked by an object declared with the same name.
 import typing
 from decimal import Decimal
 
-from borb.pdf.canvas.color.color import Color, HexColor
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.layout.layout_element import Alignment
 from borb.pdf.canvas.layout.text.paragraph import Paragraph
-
-try:
-    import black  # type: ignore[import]
-
-    able_to_import_black = True
-except ImportError:
-    able_to_import_black = False
 
 
 class CodeBlock(Paragraph):
@@ -72,8 +66,12 @@ class CodeBlock(Paragraph):
         background_color: typing.Optional[Color] = HexColor("f6f8fa"),
     ):
         # format string using black
-        if able_to_import_black:
+        try:
+            import black  # type: ignore[import]
+
             text = black.format_str(text, mode=black.Mode())
+        except:
+            pass
 
         # call super
         super().__init__(

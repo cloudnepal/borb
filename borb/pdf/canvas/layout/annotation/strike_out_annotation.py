@@ -10,8 +10,13 @@ annotations.
 import zlib
 from decimal import Decimal
 
-from borb.io.read.types import Name, Dictionary, Stream, List, Decimal as bDecimal
-from borb.pdf.canvas.color.color import Color, HexColor
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import List
+from borb.io.read.types import Name
+from borb.io.read.types import Stream
+from borb.pdf.canvas.color.color import Color
+from borb.pdf.canvas.color.color import HexColor
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.canvas.layout.annotation.annotation import Annotation
 
@@ -37,7 +42,7 @@ class StrikeOutAnnotation(Annotation):
         super(StrikeOutAnnotation, self).__init__(bounding_box=bounding_box)
 
         # (Required) The type of annotation that this dictionary describes; shall
-        # be Redact for a redaction annotation.
+        # be StrikeOut for a strikeout annotation.
         self[Name("Subtype")] = Name("StrikeOut")
 
         # (Optional; PDF 1.2) An appearance dictionary specifying how the
@@ -68,7 +73,7 @@ class StrikeOutAnnotation(Annotation):
         # The lower-left corner of the bounding box (BBox) is set to coordinates (0, 0) in the form coordinate system.
         # The box’s top and right coordinates are taken from the dimensions of the annotation rectangle (the Rect
         # entry in the widget annotation dictionary).
-        self["AP"]["N"][Name("BBox")] = List().set_is_inline(True)  # type: ignore [attr-defined]
+        self["AP"]["N"][Name("BBox")] = List().set_is_inline(True)
         self["AP"]["N"]["BBox"].append(bDecimal(0))
         self["AP"]["N"]["BBox"].append(bDecimal(0))
         self["AP"]["N"]["BBox"].append(bDecimal(bounding_box.width))

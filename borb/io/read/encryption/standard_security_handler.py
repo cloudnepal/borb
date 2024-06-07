@@ -8,21 +8,17 @@ based on whether the user creating the document specifies any passwords or acces
 """
 import hashlib
 import typing
-import zlib
 
 from borb.io.read.encryption.rc4 import RC4
-from borb.io.read.pdf_object import PDFObject
-from borb.io.read.types import (
-    AnyPDFType,
-    Boolean,
-    Decimal,
-    HexadecimalString,
-    Name,
-    Reference,
-    Stream,
-    String,
-    Dictionary,
-)
+from borb.io.read.types import AnyPDFType
+from borb.io.read.types import Boolean
+from borb.io.read.types import Decimal as bDecimal
+from borb.io.read.types import Dictionary
+from borb.io.read.types import HexadecimalString
+from borb.io.read.types import Name
+from borb.io.read.types import Reference
+from borb.io.read.types import Stream
+from borb.io.read.types import String
 
 
 class StandardSecurityHandler:
@@ -39,10 +35,9 @@ class StandardSecurityHandler:
     def __init__(
         self,
         encryption_dictionary: Dictionary,
-        user_password: typing.Optional[str] = None,
         owner_password: typing.Optional[str] = None,
+        user_password: typing.Optional[str] = None,
     ):
-
         # (Optional) A code specifying the algorithm to be used in encrypting and
         # decrypting the document:
         # 0 An algorithm that is undocumented. This value shall not be used.
@@ -59,7 +54,7 @@ class StandardSecurityHandler:
         # in the document, using the rules specified by the CF, StmF, and StrF entries.
         # The default value if this entry is omitted shall be 0, but when present should be a
         # value of 1 or greater.
-        self._v = int(encryption_dictionary.get("V", Decimal(0)))
+        self._v = int(encryption_dictionary.get("V", bDecimal(0)))
 
         # (Required) A 32-byte string, based on the user password, that shall be
         # used in determining whether to prompt the user for a password and, if so,
@@ -91,7 +86,7 @@ class StandardSecurityHandler:
         assert len(self._o) == 32
 
         # /ID
-        trailer: typing.Optional[PDFObject] = encryption_dictionary.get_parent()
+        trailer: typing.Optional["PDFObject"] = encryption_dictionary.get_parent()  # type: ignore[name-defined]
         assert trailer is not None
         assert isinstance(trailer, Dictionary)
         if "ID" in trailer:
@@ -100,35 +95,35 @@ class StandardSecurityHandler:
         # (Required) A set of flags specifying which operations shall be permitted
         # when the document is opened with user access (see Table 22).
         assert "P" in encryption_dictionary
-        self._permissions: int = int(encryption_dictionary.get("P"))  # type: ignore [arg-type]
+        self._permissions: int = int(encryption_dictionary.get("P"))  # type: ignore[arg-type]
 
         # (Optional; PDF 1.4; only if V is 2 or 3) The length of the encryption key, in bits.
         # The value shall be a multiple of 8, in the range 40 to 128. Default value: 40.
         # fmt: off
-        self._key_length: int = int(encryption_dictionary.get("Length", Decimal(40)))
+        self._key_length: int = int(encryption_dictionary.get("Length", bDecimal(40)))
         assert self._key_length % 8 == 0, "The length of the encryption key, in bits must be a multiple of 8."
         # fmt: on
 
         # (Required) A number specifying which revision of the standard security
         # handler shall be used to interpret this dictionary
-        self._revision: int = int(encryption_dictionary.get("R", Decimal(0)))
+        self._revision: int = int(encryption_dictionary.get("R", bDecimal(0)))
 
         # (Optional; meaningful only when the value of V is 4; PDF 1.5) Indicates
         # whether the document-level metadata stream (see 14.3.2, "Metadata
         # Streams") shall be encrypted. Conforming products should respect this
         # value.
         # Default value: true.
-        self._encrypt_metadata: bool = encryption_dictionary.get(
-            "EncryptMetadata", Boolean(True)
-        )
+        # fmt: off
+        self._encrypt_metadata: bool = encryption_dictionary.get("EncryptMetadata", Boolean(True))
+        # fmt: on
 
         # verify password(s)
         password: typing.Optional[bytes] = None
         if user_password is not None:
-            self._authenticate_user_password(bytes(user_password, encoding="charmap"))
+            self.authenticate_user_password(bytes(user_password, encoding="charmap"))
             password = bytes(user_password, encoding="charmap")
         if owner_password is not None:
-            self._authenticate_owner_password(bytes(owner_password, encoding="charmap"))
+            self.authenticate_owner_password(bytes(owner_password, encoding="charmap"))
             password = bytes(owner_password, encoding="charmap")
 
         # calculate encryption_key
@@ -138,46 +133,6 @@ class StandardSecurityHandler:
     #
     # PRIVATE
     #
-
-    def _authenticate_owner_password(self, owner_password: bytes) -> bool:
-        """
-        Algorithm 7: Authenticating the owner password
-        """
-        # a) Compute an encryption key from the supplied password string, as described in steps (a) to (d) of
-        # "Algorithm 3: Computing the encryption dictionary’s O (owner password) value".
-
-        # b) (Security handlers of revision 2 only) Decrypt the value of the encryption dictionary’s O entry, using an RC4
-        # encryption function with the encryption key computed in step (a).
-        # (Security handlers of revision 3 or greater) Do the following 20 times: Decrypt the value of the encryption
-        # dictionary’s O entry (first iteration) or the output from the previous iteration (all subsequent iterations),
-        # using an RC4 encryption function with a different encryption key at each iteration. The key shall be
-        # generated by taking the original key (obtained in step (a)) and performing an XOR (exclusive or) operation
-        # between each byte of the key and the single-byte value of the iteration counter (from 19 to 0).
-
-        # c) The result of step (b) purports to be the user password. Authenticate this user password using "Algorithm
-        # 6: Authenticating the user password". If it is correct, the password supplied is the correct owner password.
-
-        return False
-
-    def _authenticate_user_password(self, user_password: bytes) -> bool:
-        """
-        Algorithm 6: Authenticating the user password
-        """
-        # a) Perform all but the last step of "Algorithm 4: Computing the encryption dictionary’s U (user password)
-        # value (Security handlers of revision 2)" or "Algorithm 5: Computing the encryption dictionary’s U (user
-        # password) value (Security handlers of revision 3 or greater)" using the supplied password string.
-        previous_u_value: bytes = self._u
-        self._compute_encryption_dictionary_u_value(user_password)
-        u_value: bytes = self._u
-        self._u = previous_u_value
-
-        # b)If the result of step (a) is equal to the value of the encryption dictionary’s U entry (comparing on the first 16
-        # bytes in the case of security handlers of revision 3 or greater), the password supplied is the correct user
-        # password. The key obtained in step (a) (that is, in the first step of "Algorithm 4: Computing the encryption
-        # dictionary’s U (user password) value (Security handlers of revision 2)" or "Algorithm 5: Computing the
-        # encryption dictionary’s U (user password) value (Security handlers of revision 3 or greater)") shall be used
-        # to decrypt the document.
-        return self._u == u_value
 
     def _compute_encryption_dictionary_o_value(
         self,
@@ -349,16 +304,113 @@ class StandardSecurityHandler:
 
         return encryption_key
 
-    def _decrypt_data(self, object: AnyPDFType) -> AnyPDFType:
-        return self._encrypt_data(object)
+    @staticmethod
+    def _pad_or_truncate(b: typing.Optional[bytes]) -> bytes:
+        # fmt: off
+        padding: bytes = bytes([40, 191, 78, 94, 78, 117, 138, 65,
+                                100, 0, 78, 86, 255, 250, 1, 8,
+                                46, 46, 0, 182, 208, 104, 62, 128,
+                                47, 12, 169, 254, 100, 83, 105, 122])
+        # fmt: on
+        if b is None:
+            return padding
+        if len(b) > 32:
+            return b[0:32]
+        if len(b) < 32:
+            b2: bytes = b + padding
+            return b2[0:32]
+        return b
 
-    def _encrypt_data(self, object: AnyPDFType) -> AnyPDFType:
+    @staticmethod
+    def _str_to_bytes(s: typing.Optional[str]) -> typing.Optional[bytes]:
+        if s is None:
+            return None
+        return bytes(s, encoding="charmap")
+
+    @staticmethod
+    def _unescape_pdf_syntax(
+        s: typing.Union[str, String, None]
+    ) -> typing.Optional[str]:
+        # None
+        if s is None:
+            return None
+        # String
+        if isinstance(s, String):
+            return str(s.get_content_bytes(), encoding="latin1")
+        # str
+        return str(String(s).get_content_bytes(), encoding="latin1")
+
+    #
+    # PUBLIC
+    #
+
+    def authenticate_owner_password(self, owner_password: bytes) -> bool:
+        """
+        Algorithm 7: Authenticating the owner password
+        :param owner_password:  the owner password
+        :return:                True if the owner password matches, False otherwise
+        """
+        # a) Compute an encryption key from the supplied password string, as described in steps (a) to (d) of
+        # "Algorithm 3: Computing the encryption dictionary’s O (owner password) value".
+
+        # b) (Security handlers of revision 2 only) Decrypt the value of the encryption dictionary’s O entry, using an RC4
+        # encryption function with the encryption key computed in step (a).
+        # (Security handlers of revision 3 or greater) Do the following 20 times: Decrypt the value of the encryption
+        # dictionary’s O entry (first iteration) or the output from the previous iteration (all subsequent iterations),
+        # using an RC4 encryption function with a different encryption key at each iteration. The key shall be
+        # generated by taking the original key (obtained in step (a)) and performing an XOR (exclusive or) operation
+        # between each byte of the key and the single-byte value of the iteration counter (from 19 to 0).
+
+        # c) The result of step (b) purports to be the user password. Authenticate this user password using "Algorithm
+        # 6: Authenticating the user password". If it is correct, the password supplied is the correct owner password.
+
+        # TODO
+        return False
+
+    def authenticate_user_password(self, user_password: bytes) -> bool:
+        """
+        Algorithm 6: Authenticating the user password
+        :param user_password:   the user password
+        :return:                True if the user password matches, False otherwise
+        """
+        # a) Perform all but the last step of "Algorithm 4: Computing the encryption dictionary’s U (user password)
+        # value (Security handlers of revision 2)" or "Algorithm 5: Computing the encryption dictionary’s U (user
+        # password) value (Security handlers of revision 3 or greater)" using the supplied password string.
+        previous_u_value: bytes = self._u
+        self._compute_encryption_dictionary_u_value(user_password)
+        u_value: bytes = self._u
+        self._u = previous_u_value
+
+        # b)If the result of step (a) is equal to the value of the encryption dictionary’s U entry (comparing on the first 16
+        # bytes in the case of security handlers of revision 3 or greater), the password supplied is the correct user
+        # password. The key obtained in step (a) (that is, in the first step of "Algorithm 4: Computing the encryption
+        # dictionary’s U (user password) value (Security handlers of revision 2)" or "Algorithm 5: Computing the
+        # encryption dictionary’s U (user password) value (Security handlers of revision 3 or greater)") shall be used
+        # to decrypt the document.
+        if self._revision >= 3:
+            return self._u[0:16] == u_value[0:16]
+        return self._u == u_value
+
+    def decrypt(self, object: AnyPDFType) -> AnyPDFType:
+        """
+        This function decrypts an object inside the PDF
+        :param object:  the object to be decrypted
+        :return:        the decrypted object
+        """
+        return self.encrypt(object)
+
+    def encrypt(self, object: AnyPDFType) -> AnyPDFType:
+        """
+        This function encrypts an object inside the PDF
+        :param object:  the object to be encrypted
+        :return:        the encrypted object
+        """
         # a) Obtain the object number and generation number from the object identifier of the string or stream to be
         # encrypted (see 7.3.10, "Indirect Objects"). If the string is a direct object, use the identifier of the indirect
         # object containing it.
         reference: typing.Optional[Reference] = object.get_reference()
         if reference is None:
-            parent: typing.Optional[PDFObject] = object.get_parent()
+            parent: typing.Optional["PDFObject"] = object.get_parent()  # type: ignore[name-defined]
             assert parent is not None
             reference = parent.get_reference()
         assert reference is not None
@@ -406,52 +458,10 @@ class StandardSecurityHandler:
             )
             # TODO
         if isinstance(object, Stream):
-            stream_new_content_bytes: bytes = RC4().encrypt(
-                h.digest()[0:n_plus_5], object["DecodedBytes"]
+            object[Name("Bytes")] = RC4().encrypt(
+                h.digest()[0:n_plus_5], object["Bytes"]
             )
-            object[Name("DecodedBytes")] = stream_new_content_bytes
-            object[Name("Bytes")] = zlib.compress(object["DecodedBytes"], 9)
             return object
 
         # default
         return object
-
-    @staticmethod
-    def _pad_or_truncate(b: typing.Optional[bytes]) -> bytes:
-        # fmt: off
-        padding: bytes = bytes([40, 191, 78, 94, 78, 117, 138, 65,
-                                100, 0, 78, 86, 255, 250, 1, 8,
-                                46, 46, 0, 182, 208, 104, 62, 128,
-                                47, 12, 169, 254, 100, 83, 105, 122])
-        # fmt: on
-        if b is None:
-            return padding
-        if len(b) > 32:
-            return b[0:32]
-        if len(b) < 32:
-            b2: bytes = b + padding
-            return b2[0:32]
-        return b
-
-    @staticmethod
-    def _str_to_bytes(s: typing.Optional[str]) -> typing.Optional[bytes]:
-        if s is None:
-            return None
-        return bytes(s, encoding="charmap")
-
-    @staticmethod
-    def _unescape_pdf_syntax(
-        s: typing.Union[str, String, None]
-    ) -> typing.Optional[str]:
-        # None
-        if s is None:
-            return None
-        # String
-        if isinstance(s, String):
-            return str(s.get_content_bytes(), encoding="latin1")
-        # str
-        return str(String(s).get_content_bytes(), encoding="latin1")
-
-    #
-    # PUBLIC
-    #
