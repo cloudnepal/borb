@@ -23,6 +23,8 @@ It represents a PDF document as a JSON-like datastructure of nested lists, dicti
 
 This is currently a one-man project, so the focus will always be to support those use-cases that are more common in favor of those that are rare.
 
+📣 **Next (major) release**: You can track the status of the next release on a dedicated [GitHub Pages](https://jorisschellekens.github.io/borb-3-status/).
+
 ## 1. About the Examples
 
 The examples can be found in a separate repository.
